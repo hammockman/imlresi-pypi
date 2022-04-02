@@ -20,6 +20,19 @@ from struct import unpack
 import logging
 
 
+def load_iml_json(fn):
+    """The json-like format IML uses sometimes isn't exactly JSON.
+
+    E.g.: when PD-Tools translates an rgp file with multi line comment
+    from binary to json formats it embeds TAB (\x09) characters in
+    the "remark field. This breaks JSON parsers.
+    """
+    import json
+    s = open(fn, 'r').read()
+    s = s.replace("\t","\\t")
+    return json.loads(s)
+
+
 def identify_format(fn):
     """
     Identify the trace file format
@@ -31,7 +44,11 @@ def identify_format(fn):
     if byte1 == b'\x12':
         fmt = 'bin'
     elif byte1 == b'\x7b':  # '{'=='\x7b'
-        fmt = 'json'
+        data = load_iml_json(fn)
+        if "dateTime" in data['header']:
+            fmt = 'pdc'
+        else:
+            fmt = 'json'
     else:
         with open(fn, 'rb') as f:
             line1 = f.readline().strip()
@@ -102,9 +119,7 @@ def read_bin(fn):
         settings = f.read(81)
 
         for field in ['direction', 'species', 'location', 'name']:
-            #hdr[field] = get_next_nbyte_string(f)
-            _ = get_next_nbyte_string(f)
-            # these fields are of no current interest
+            hdr[field] = get_next_nbyte_string(f)
 
         # ??????
         hdr['unknown2'] = f.read(108)
@@ -193,8 +208,8 @@ def read_txt1(fn):
             'max_drill_amplitude': int(lines[18])/100.,  # possibly in lines[16:19]
             'max_feed_amplitude': int(lines[19])/100.,  # possibly in lines[16:19]
             #'abort_reason': None,
-            #'diameter_cm': None,
-            #'level_cm': None,
+            #'diameter_cm': int(lines[111])/100.,
+            #'level_cm': int(lines[112])/100.,
             'depth_mode': 0,
         }
 
@@ -209,10 +224,10 @@ def read_txt1(fn):
             'time': lines[7],
             'measurement_number': int(lines[0]),
             'description': lines[5],
-            #'direction': None,
-            #'species': None,
-            #'location': None,
-            #'name': None,
+            'direction': lines[113],
+            'species': lines[114],
+            'location': lines[115],
+            'name': lines[116],
             #'assessment': {},
             'comment': "\t".join(lines[123:129])
         }
@@ -263,8 +278,8 @@ def read_txt2(fn):
             'max_drill_amplitude': float(lines[27]),
             'max_feed_amplitude': float(lines[26]),
             #'abort_reason': None,
-            #'diameter_cm': None,
-            #'level_cm': None,
+            #'diameter_cm': None, # embedded nowhere in txt2 format!!!
+            #'level_cm': float(lines[256].split(",")[0].replace('"','')),
         }
 
     def read_header(lines):
@@ -278,10 +293,10 @@ def read_txt2(fn):
             'time': f"{int(lines[13]):02d}:{int(lines[14]):02d}:{int(lines[15]):02d}",
             'measurement_number': int(lines[7]),
             'description': lines[8],
-            #'direction': None,
-            #'species': None,
-            #'location': None,
-            #'name': None,
+            'direction': lines[256].split(",")[1].replace('"',''),
+            'species': lines[256].split(",")[2].replace('"',''),
+            'location': lines[256].split(",")[3].replace('"',''),
+            'name': lines[256].split(",")[4].replace('"',''),
             #'assessment': {},
             'comment': lines[9],
         }
@@ -315,7 +330,7 @@ def read_json(fn):
                 'max_feed_amplitude': J['header']['ampMaxFeed'],  # todo: misnomer?
                 #'abort_reason': None,
                 #'diameter_cm': J['header']['diameter'], # NOT the same as diameter_cm in binary data!!!
-                #'level_cm': None,
+                #'level_cm': float(J['app']['object'][0]),
                 }
 
     def read_header(J):
@@ -325,46 +340,72 @@ def read_json(fn):
             'firmware_version': J['header']['verFirmware'],
             'SNRelectronic': J['header']['snrElectronic'],
             'hardwareVersion': J['header']['verElectronic'],
-            'date': '%02d.%02d.%04d' % (
-                int(J['header']['dateDay']),
-                int(J['header']['dateMonth']),
-                int(J['header']['dateYear'])
-            ),
-            'time': '%02d:%02d:%02d' % (
-                int(J['header']['timeHour']),
-                int(J['header']['timeMinute']),
-                int(J['header']['timeSecond'])
-            ),
+            'date': J['header']['date'],
+            'time': J['header']['time'],
             'measurement_number': J['header']['number'],
             'description': J['header']['idNumber'],
-            #'direction': None,
-            #'species': None,
-            #'location': None,
-            #'name': None,
+            'direction': J['app']['object'][1],
+            'species': J['app']['object'][2],
+            'location': J['app']['object'][3],
+            'name': J['app']['object'][4],
             #'assessment': {},
             'comment': J['header']['remark'],
         }
 
-    import json
-    s = open(fn, 'r').read()
-
-    # when PD-Tools translates an rgp file with multi line comment
-    # from binary to json formats it embeds TAB (\x09) characters in
-    # the "remark field. This breaks JSON parsers.
-    s = s.replace("\t","\\t")
-
     try:
-        J = json.loads(s)
+        J = load_iml_json(fn)
     except Exception as err:
         raise ValueError(f'{fn}:{err}. Invalid JSON?')
     assert J["device"] == "0F02"
     assert J["version"] == 2
+
+    # make date and time encoding consistent
+    if 'dateDay' in J['header']: # JSON format
+        J['header']['date'] = '%02d.%02d.%04d' % (
+            int(J['header']['dateDay']),
+            int(J['header']['dateMonth']),
+            int(J['header']['dateYear'])
+        )
+        J['header']['time'] = '%02d:%02d:%02d' % (
+            int(J['header']['timeHour']),
+            int(J['header']['timeMinute']),
+            int(J['header']['timeSecond'])
+        )
+        for k in (
+                'dateDay',
+                'dateMonth',
+                'dateYear',
+                'timeHour',
+                'timeMinute',
+                'timeSecond'
+        ):
+            J['header'].pop(k)
+    elif 'dateTime' in J['header']: # PDC format
+        from datetime import datetime
+        drilltime = datetime.strptime(
+            J['header']['dateTime'],
+            "%Y%m%d-%H:%M:%S"
+        )
+        J['header']['date'] = drilltime.strftime("%d.%m.%Y")
+        J['header']['time'] = drilltime.strftime("%H:%M:%S")
+        J['header'].pop('dateTime')
+
+    # ensure /app/object exists
+    if 'app' not in J:
+        J['app'] = {}
+    if 'object' not in J['app']:
+        J['app']['object'] = [None, None, None, None, None]
+
     return {
         'header': read_header(J),
         'drill': J["profile"]["drill"],
         'feed': J["profile"]["feed"],
         'settings': read_settings(J)
     }
+
+
+def read_pdc(fn):
+    return read_json(fn)
 
 
 def init_json(mapdict, meta, data):
@@ -505,11 +546,11 @@ class Trace():
         self.trace_filename = trace_filename
         self.trace_format = identify_format(self.trace_filename)
         read = {
-            'bin':  self.read_bin,
-            'pdc':  self.read_pdc,
-            'txt1': self.read_txt1,
-            'txt2': self.read_txt2,
-            'json': self.read_json,
+            'bin':  read_bin,
+            'pdc':  read_pdc,
+            'txt1': read_txt1,
+            'txt2': read_txt2,
+            'json': read_json,
             }[self.trace_format]
         res = read(self.trace_filename)
         self.header = res['header']

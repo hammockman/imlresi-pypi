@@ -1,13 +1,13 @@
 #import pytest
 from imlresi import trace
 
-
 # test format identification
 def test_identify_format():
     assert trace.identify_format('tests/data/1-json.rgp') == 'json'
     assert trace.identify_format('tests/data/1-bin.rgp') == 'bin'
     assert trace.identify_format('tests/data/1-txt1.txt') == 'txt1'
     assert trace.identify_format('tests/data/1-txt2.txt') == 'txt2'
+    assert trace.identify_format('tests/data/2-pdc.pdc') == 'pdc'
 
 
 # test individual format trace parsers

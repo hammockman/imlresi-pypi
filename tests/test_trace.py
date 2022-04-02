@@ -24,7 +24,23 @@ def test_read_xxx():
     txt2['settings'].pop('raw')
     assert jsn == txt2, "JSON and TXT2 differ"
 
+    # todo: find an equivalent pair of PDC and JSON trace files
+    # jsn = trace.read_json('tests/data/2-json.rgp')
+    # jsn['settings'].pop('raw')
+    # pdc = trace.read_pdc('tests/data/2-pdc.pdc')
+    # pdc['settings'].pop('raw')
+    # assert jsn == pdc, "JSON and PDC differ"
+
 
 # test the Trace class
 def test_Trace():
-    pass
+    tr = trace.Trace()
+    trfns = (
+        'tests/data/1-json.rgp',
+        'tests/data/1-bin.rgp',
+        'tests/data/1-txt1.txt',
+        'tests/data/1-txt2.txt',
+        'tests/data/2-pdc.pdc'
+    )
+    for trfn in trfns:
+        tr.read(trfn)

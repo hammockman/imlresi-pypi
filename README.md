@@ -5,5 +5,5 @@ Tools for dealing with [IML-Resi PowerDrill](https://www.iml-service.com/product
 
 Current limitations:
 
-1. focus on measured data
-1. poor support for data ggenerated in PD-Tools (e.g. assessments)
+1. Focus is on actual measurements made by the tool rather than meta-info.
+1. Poor support for data generated in PD-Tools (e.g. "assessments").

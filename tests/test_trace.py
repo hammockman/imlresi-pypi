@@ -35,12 +35,23 @@ def test_read_xxx():
 # test the Trace class
 def test_Trace():
     tr = trace.Trace()
-    trfns = (
-        'tests/data/1-json.rgp',
-        'tests/data/1-bin.rgp',
-        'tests/data/1-txt1.txt',
-        'tests/data/1-txt2.txt',
-        'tests/data/2-pdc.pdc'
+    trfns_resiId_hash = (
+        ('tests/data/1-json.rgp', 'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
+        ('tests/data/1-bin.rgp',  'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
+        ('tests/data/1-txt1.txt', 'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
+        ('tests/data/1-txt2.txt', 'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
+        ('tests/data/2-pdc.pdc',  'TEST 7',          '0936d19f0c701decd51d32b757c447bc'),
     )
-    for trfn in trfns:
+    for trfn, resiId, hash in trfns_resiId_hash:
         tr.read(trfn)
+        assert tr.get_resiId() == resiId
+        assert tr.hash() == hash
+
+
+# todo: test Trace.__str__()
+
+
+# todo: test Trace.__repr__()
+
+
+# todo: test Trace.to_json()

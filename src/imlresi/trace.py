@@ -556,6 +556,18 @@ class Trace():
         self.drill = res['drill']
         self.feed = res['feed']
 
+    def hash(self):
+        # use md5 (rather than sha256 for example) only because it creates
+        # a 128-bit hash which neatly fits in a postgres uuid column
+        import hashlib
+        import json
+        return hashlib.md5(
+            json.dumps(
+                #self.settings['raw']
+                self.to_json()
+            ).encode('utf-8')
+        ).hexdigest()
+
     def get_resiId(self):
         return self.header['description']
 

@@ -517,14 +517,16 @@ class Trace():
                 s += '%s: %s\n' % (k, v)
         s += '*** DRILL FORCE (TORQUE) ***\n'
         if len(self.drill) > 20:
-            print('%s ... %s' % (self.drill[:13], self.drill[-3:]))
+            s += '%s ... %s\n' % (self.drill[:13], self.drill[-3:])
         else:
-            print(self.drill)
+            s += self.drill + "\n"
         s += '*** FEED FORCE ***\n'
         if len(self.feed) > 20:
-            print('%s ... %s' % (self.drill[:13], self.drill[-3:]))
+            s += '%s ... %s\n' % (self.drill[:13], self.drill[-3:])
         else:
-            print(self.drill)
+            s += self.drill + "\n"
+
+        return s
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)

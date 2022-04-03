@@ -76,7 +76,7 @@ def read_bin(fn):
     def read_settings(b):
         return {
             # 'raw': b.decode(),
-            'max_drill_depth':      unpack('<I', b[:4])[0],
+            'max_drill_depth':      unpack('<I', b[:4])[0]/10.,
             'depth_mode':           unpack('<B', b[4:5])[0],  # this is just a guess; need to set this in instrument and check
             'preselected_depth':    unpack('<I', b[5:9])[0],  # this is just a guess; need to set this in instrument and check
             'drill_depth':          unpack('<I', b[9:13])[0]/10., # mm
@@ -170,7 +170,6 @@ def read_bin(fn):
     hdr.pop('unknown2')
     hdr.pop('assessment')
     settings.pop('abort_reason')
-    settings.pop('max_drill_depth')
     settings.pop('preselected_depth')
     settings.pop('level_cm')
     settings.pop('diameter_cm')
@@ -195,7 +194,7 @@ def read_txt1(fn):
     def read_settings(lines):
         return {
             'raw': "\n".join(lines),
-            #'max_drill_depth': int(lines[10])/100.,
+            'max_drill_depth': int(lines[10])/10.,
             #'depth_mode': None,
             #'preselected_depth': None,
             'drill_depth':  int(lines[13])/10.,
@@ -265,7 +264,7 @@ def read_txt2(fn):
     def read_settings(lines):
         return {
             'raw': "\n".join(lines),
-            #'max_drill_depth': float(lines[18]),
+            'max_drill_depth': int(float(lines[18])*100.)/10.,
             'depth_mode': 0, # fixme
             #'preselected_depth': None,
             'drill_depth':  float(lines[21])*10.,  # mm
@@ -316,7 +315,7 @@ def read_json(fn):
 
     def read_settings(J):
         return {'raw': J,
-                #'max_drill_depth': None,
+                'max_drill_depth': int(J['header']['deviceLength']*100)/10., # mm
                 'depth_mode': J['header']['depthMode'],
                 #'preselected_depth': None,
                 'drill_depth':  J['header']['depthMsmt']*10., # mm
@@ -458,7 +457,6 @@ def init_json(mapdict, meta, data):
             "speedFeed": 0.,
             "speedDrill": 0,
             "resolutionFeed": 0,
-            "depthPresel": 0.,
             "wiInstalled": 0,
             "wi": {
                 # ...
@@ -587,7 +585,7 @@ class Trace():
                 "depthMsmt": lambda x: x['drill_depth'],  # ??????
                 "ampMaxFeed": lambda x: x['max_feed_amplitude'],
                 "ampMaxDrill": lambda x: x['max_drill_amplitude'],
-                "abortState": lambda x: x['abort_reason'],
+                #"abortState": lambda x: x['abort_reason'],
                 # "feedOn": 0,
                 # "ncOn": 0,
                 # "ncState": 0,
@@ -595,14 +593,14 @@ class Trace():
                 # "tiltRelOn": 0,
                 # "tiltRelAngle": 0.0,
                 # "tiltAngle": 0.0,
-                "diameter": lambda x: x['diameter_cm'],
+                #"diameter": lambda x: x['diameter_cm'],  ### WRONG
                 "offsetDrill": lambda x: x['drill_motor_offset'],
                 "offsetFeed": lambda x: x['feed_motor_offset'],
                 "resolutionAmp": lambda x: x['resolution_amplitude'],
                 "speedFeed": lambda x: x['feed_speed'],
                 "speedDrill": lambda x: x['needle_speed'],
                 "resolutionFeed": lambda x: x['samples_per_mm'],
-                "depthPresel": lambda x: x['preselected_depth'],
+                #"depthPresel": lambda x: x['preselected_depth'],
             },
             {
                 **self.header,

@@ -242,7 +242,7 @@ def read_txt1(fn):
                 drill.append(float(d)/100.)
                 feed.append(float(f)/100.)
         else:
-            drill = [int(x) for x in lines]
+            drill = [int(x)/100. for x in lines]
             feed = None
         return drill, feed
 
@@ -498,11 +498,19 @@ def create_jdata(mapdict, meta, data):
 
 class Trace():
 
-    def __init__(self):
-        self.header = {}
-        self.settings = {}
-        self.drill = []
-        self.feed = []
+    def __init__(self, json_string=None):
+        if json_string is not None:
+            import json
+            json_data = json.loads(json_string)
+            self.header = json_data['header']
+            self.settings = {}
+            self.drill = json_data['profile']['drill']
+            self.feed = json_data['profile']['feed']
+        else:
+            self.header = {}
+            self.settings = {}
+            self.drill = []
+            self.feed = []
 
     def __str__(self):
         s = '*** HEADER ***\n'
@@ -638,6 +646,12 @@ class Trace():
             )
 
         return json.dumps(J)  # this is a str *NOT* bytes
+
+    def plot(self, axs=None):
+        if axs is None:
+            from matplotlib import pyplot as plt
+            fig, axs = plt.subplots(2, 1, figsize=(15,5))
+        ax.plot(self.drill)
 
 
 if __name__ == "__main__":

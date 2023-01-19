@@ -25,7 +25,7 @@ def read(*names, **kwargs):
 
 setup(
     name='imlresi',
-    version='0.0.4',
+    version='0.0.5',
     license='MIT',
     description='Tools for dealing with IML-Resi PowerDrill data.',
     long_description=read('README.md'),
@@ -53,6 +53,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
         # uncomment if you test on these interpreters:

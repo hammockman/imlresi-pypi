@@ -18,6 +18,7 @@ jh, June 2016
 
 from struct import unpack
 import logging
+import ujson as json # faster; minifies by default
 
 
 def load_iml_json(fn):
@@ -27,10 +28,9 @@ def load_iml_json(fn):
     from binary to json formats it embeds TAB (\x09) characters in
     the "remark field. This breaks JSON parsers.
     """
-    import json
     s = open(fn, 'r').read()
     s = s.replace("\t","\\t")
-    return json.loads(s)
+    return json.loads(s), s
 
 
 def identify_format(fn):
@@ -44,7 +44,7 @@ def identify_format(fn):
     if byte1 == b'\x12':
         fmt = 'bin'
     elif byte1 == b'\x7b':  # '{'=='\x7b'
-        data = load_iml_json(fn)
+        data, _ = load_iml_json(fn)
         if "dateTime" in data['header']:
             fmt = 'pdc'
         else:
@@ -313,24 +313,25 @@ def read_json(fn):
     """Read a trace (*.rgp) JSON format IML used in firmwares after 1.32
     """
 
-    def read_settings(J):
-        return {'raw': J,
-                'max_drill_depth': int(J['header']['deviceLength']*100)/10., # mm
-                'depth_mode': J['header']['depthMode'],
-                #'preselected_depth': None,
-                'drill_depth':  J['header']['depthMsmt']*10., # mm
-                'feed_speed': J['header']['speedFeed'],
-                'resolution_amplitude': J['header']['resolutionAmp'],
-                'samples_per_mm': J['header']['resolutionAmp']/1000.,  # a total guess
-                'drill_motor_offset':  J['header']['offsetDrill'],
-                'feed_motor_offset':   J['header']['offsetFeed'],
-                'needle_speed': J['header']['speedDrill'],
-                'max_drill_amplitude': J['header']['ampMaxDrill'],  # todo: misnomer?
-                'max_feed_amplitude': J['header']['ampMaxFeed'],  # todo: misnomer?
-                #'abort_reason': None,
-                #'diameter_cm': J['header']['diameter'], # NOT the same as diameter_cm in binary data!!!
-                #'level_cm': float(J['app']['object'][0]),
-                }
+    def read_settings(J, raw):
+        return {
+            'raw': raw,
+            'max_drill_depth': int(J['header']['deviceLength']*100)/10., # mm
+            'depth_mode': J['header']['depthMode'],
+            #'preselected_depth': None,
+            'drill_depth':  J['header']['depthMsmt']*10., # mm
+            'feed_speed': J['header']['speedFeed'],
+            'resolution_amplitude': J['header']['resolutionAmp'],
+            'samples_per_mm': J['header']['resolutionAmp']/1000.,  # a total guess
+            'drill_motor_offset':  J['header']['offsetDrill'],
+            'feed_motor_offset':   J['header']['offsetFeed'],
+            'needle_speed': J['header']['speedDrill'],
+            'max_drill_amplitude': J['header']['ampMaxDrill'],  # todo: misnomer?
+            'max_feed_amplitude': J['header']['ampMaxFeed'],  # todo: misnomer?
+            #'abort_reason': None,
+            #'diameter_cm': J['header']['diameter'], # NOT the same as diameter_cm in binary data!!!
+            #'level_cm': float(J['app']['object'][0]),
+        }
 
     def read_header(J):
         return {
@@ -352,7 +353,7 @@ def read_json(fn):
         }
 
     try:
-        J = load_iml_json(fn)
+        J, raw = load_iml_json(fn)
     except Exception as err:
         raise ValueError(f'{fn}:{err}. Invalid JSON?')
     assert J["device"] == "0F02"
@@ -399,7 +400,7 @@ def read_json(fn):
         'header': read_header(J),
         'drill': J["profile"]["drill"],
         'feed': J["profile"]["feed"],
-        'settings': read_settings(J)
+        'settings': read_settings(J, raw)
     }
 
 
@@ -407,7 +408,7 @@ def read_pdc(fn):
     return read_json(fn)
 
 
-def init_json(mapdict, meta, data):
+def create_jdata(mapdict, meta, data):
     """
     Initialise an object with the same structure as the json trace format.
 
@@ -562,69 +563,81 @@ class Trace():
         # use md5 (rather than sha256 for example) only because it creates
         # a 128-bit hash which neatly fits in a postgres uuid column
         import hashlib
-        import json
+
+        # json ignores whitespace. md5 does not. if you want semantic
+        # hash, rather than one that depends on the
+        # pretty-printed-ness, then the string being hashed needs to
+        # be minified or made canonical in some other way
+
+        # note that because of the way to_json() works, if the trace
+        # was originally in "json" format this will use original data
+        # (put through a load-dump cycle to make consistent) otherwise
+        # it will use a converted representation
         return hashlib.md5(
-            json.dumps(
-                #self.settings['raw']
-                self.to_json()
-            ).encode('utf-8')
+            self.to_json().encode('utf-8')
         ).hexdigest()
 
     def get_resiId(self):
         return self.header['description']
 
     def to_json(self):
+        """Regenerate a json format trace.
+
+        Ideally the output of this should be able to be read back into
+        PD-Tools. Currently it cannot.
         """
-        Regenerate a json format trace capable of being read back into
-        PD-Tools.
-        """
-        return init_json(
-            {
-                "snrMachine": lambda x: x['toolserial'],
-                "verFirmware": lambda x: x['firmware_version'],
-                # "memoryId": "????????????",
-                "snrElectronic": lambda x: x['SNRelectronic'],
-                "verElectronic": lambda x: x['hardwareVersion'],
-                "dateYear": lambda x: int(x['date'].split('.')[2]),
-                "dateMonth": lambda x: int(x['date'].split('.')[1]),
-                "dateDay": lambda x: int(x['date'].split('.')[0]),
-                "timeHour": lambda x: int(x['time'].split(':')[0]),
-                "timeMinute": lambda x: int(x['time'].split(':')[1]),
-                "timeSecond": lambda x: int(x['time'].split(':')[2]),
-                "number": lambda x: x['measurement_number'],
-                "idNumber": lambda x: x['description'],
-                # "remark": "",  # user specified comment string
-                "deviceLength": lambda x: x['max_drill_depth'],  # ??????
-                "depthMode": lambda x: x['depth_mode'],
-                "depthMsmt": lambda x: x['drill_depth'],  # ??????
-                "ampMaxFeed": lambda x: x['max_feed_amplitude'],
-                "ampMaxDrill": lambda x: x['max_drill_amplitude'],
-                #"abortState": lambda x: x['abort_reason'],
-                # "feedOn": 0,
-                # "ncOn": 0,
-                # "ncState": 0,
-                # "tiltOn": 0,
-                # "tiltRelOn": 0,
-                # "tiltRelAngle": 0.0,
-                # "tiltAngle": 0.0,
-                #"diameter": lambda x: x['diameter_cm'],  ### WRONG
-                "offsetDrill": lambda x: x['drill_motor_offset'],
-                "offsetFeed": lambda x: x['feed_motor_offset'],
-                "resolutionAmp": lambda x: x['resolution_amplitude'],
-                "speedFeed": lambda x: x['feed_speed'],
-                "speedDrill": lambda x: x['needle_speed'],
-                "resolutionFeed": lambda x: x['samples_per_mm'],
-                #"depthPresel": lambda x: x['preselected_depth'],
-            },
-            {
-                **self.header,
-                **self.settings
-            },
-            {
-                'drill': self.drill,
-                'feed': self.feed
-            }
-        )
+        if self.trace_format == "json":
+            J = json.loads(self.settings['raw'])
+        else:
+            J = create_jdata(
+                {
+                    "snrMachine": lambda x: x['toolserial'],
+                    "verFirmware": lambda x: x['firmware_version'],
+                    # "memoryId": "????????????",
+                    "snrElectronic": lambda x: x['SNRelectronic'],
+                    "verElectronic": lambda x: x['hardwareVersion'],
+                    "dateYear": lambda x: int(x['date'].split('.')[2]),
+                    "dateMonth": lambda x: int(x['date'].split('.')[1]),
+                    "dateDay": lambda x: int(x['date'].split('.')[0]),
+                    "timeHour": lambda x: int(x['time'].split(':')[0]),
+                    "timeMinute": lambda x: int(x['time'].split(':')[1]),
+                    "timeSecond": lambda x: int(x['time'].split(':')[2]),
+                    "number": lambda x: x['measurement_number'],
+                    "idNumber": lambda x: x['description'],
+                    # "remark": "",  # user specified comment string
+                    "deviceLength": lambda x: x['max_drill_depth'],  # ??????
+                    "depthMode": lambda x: x['depth_mode'],
+                    "depthMsmt": lambda x: x['drill_depth'],  # ??????
+                    "ampMaxFeed": lambda x: x['max_feed_amplitude'],
+                    "ampMaxDrill": lambda x: x['max_drill_amplitude'],
+                    #"abortState": lambda x: x['abort_reason'],
+                    # "feedOn": 0,
+                    # "ncOn": 0,
+                    # "ncState": 0,
+                    # "tiltOn": 0,
+                    # "tiltRelOn": 0,
+                    # "tiltRelAngle": 0.0,
+                    # "tiltAngle": 0.0,
+                    #"diameter": lambda x: x['diameter_cm'],  ### WRONG
+                    "offsetDrill": lambda x: x['drill_motor_offset'],
+                    "offsetFeed": lambda x: x['feed_motor_offset'],
+                    "resolutionAmp": lambda x: x['resolution_amplitude'],
+                    "speedFeed": lambda x: x['feed_speed'],
+                    "speedDrill": lambda x: x['needle_speed'],
+                    "resolutionFeed": lambda x: x['samples_per_mm'],
+                    #"depthPresel": lambda x: x['preselected_depth'],
+                },
+                {
+                    **self.header,
+                    **self.settings
+                },
+                {
+                    'drill': self.drill,
+                    'feed': self.feed
+                }
+            )
+
+        return json.dumps(J)  # this is a str *NOT* bytes
 
 
 if __name__ == "__main__":

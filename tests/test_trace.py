@@ -36,7 +36,7 @@ def test_read_xxx():
 def test_Trace():
     tr = trace.Trace()
     trfns_resiId_hash = (
-        ('tests/data/1-json.rgp', 'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
+        ('tests/data/1-json.rgp', 'some-identifier', 'f7016732bd8bd193fd4a97712acae86b'),
         ('tests/data/1-bin.rgp',  'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
         ('tests/data/1-txt1.txt', 'some-identifier', 'bb5dccf966861934dc59d1df70204238'),
         ('tests/data/1-txt2.txt', 'some-identifier', 'bb5dccf966861934dc59d1df70204238'),

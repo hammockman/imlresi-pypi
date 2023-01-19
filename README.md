@@ -23,7 +23,7 @@ pip install imlresi
 
 
 ```python
-from imlresi import Trace
+from imlresi.trace import Trace
 
 tr = Trace()
 tr.read('trace.rgp')

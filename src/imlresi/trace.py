@@ -528,12 +528,12 @@ class Trace():
         if len(self.drill) > 20:
             s += '%s ... %s\n' % (self.drill[:13], self.drill[-3:])
         else:
-            s += self.drill + "\n"
+            s += '%s' % self.drill + "\n"
         s += '*** FEED FORCE ***\n'
         if len(self.feed) > 20:
             s += '%s ... %s\n' % (self.drill[:13], self.drill[-3:])
         else:
-            s += self.drill + "\n"
+            s += '%s' % self.feed + "\n"
 
         return s
 

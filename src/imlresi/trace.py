@@ -21,16 +21,20 @@ import logging
 import ujson as json # faster; minifies by default
 
 
-def load_iml_json(fn):
+def load_iml_json(buf):
     """The json-like format IML uses sometimes isn't exactly JSON.
 
     E.g.: when PD-Tools translates an rgp file with multi line comment
     from binary to json formats it embeds TAB (\x09) characters in
     the "remark field. This breaks JSON parsers.
     """
-    s = open(fn, 'r').read()
+    s = buf.read().decode()
     s = s.replace("\t","\\t")
-    return json.loads(s), s
+    try:
+        return json.loads(s), s
+    except Exception as err:
+        print(s)
+        raise(err)
 
 
 def identify_format(fn):
@@ -42,7 +46,8 @@ def identify_format(fn):
     if byte1 == b'\x12':
         fmt = 'bin'
     elif byte1 == b'\x7b':  # '{'=='\x7b'
-        data, _ = load_iml_json(fn)
+        #data, _ = load_iml_json(open(fn,'r'))
+        data = json.load(open(fn, 'r'))
         if "dateTime" in data['header']:
             fmt = 'pdc'
         else:
@@ -58,7 +63,57 @@ def identify_format(fn):
     return fmt
 
 
-def read_bin(fn):
+def identify_format_stream(buf):
+    """
+    Identify the format of a trace held as bytes in a buffer.
+    """
+    buf.seek(0) # please rewind before returning
+    byte1 = bytes(buf.read(1))
+    print(byte1)
+    if byte1 == b'\x12':
+        fmt = 'bin'
+    elif byte1 == b'\x7b':  # '{'=='\x7b'
+        buf.seek(0)
+        data = json.load(buf)
+        if "dateTime" in data['header']:
+            fmt = 'pdc'
+        else:
+            fmt = 'json'
+    else:
+        buf.seek(0)
+        line1 = buf.readline().strip()
+        if line1 == b'0F02':
+            fmt = 'txt2'
+        else:
+            fmt = 'txt1'
+
+    return fmt
+
+
+def identify_format_bytes(b):
+    """
+    Identify the format of a trace held in bytes
+    """
+    byte1 = b[0:1] # have to use this abomination since type(b[0])=='int'!!!
+    if byte1 == b'\x12':
+        fmt = 'bin'
+    elif byte1 == b'\x7b':  # '{'=='\x7b'
+        data = json.loads(b)
+        if "dateTime" in data['header']:
+            fmt = 'pdc'
+        else:
+            fmt = 'json'
+    else:
+        line1 = b[:b.find('\n')].strip()
+        if line1 == b'0F02':
+            fmt = 'txt2'
+        else:
+            fmt = 'txt1'
+
+    return fmt
+
+
+def read_bin(instream):
     """Read a trace (*.rgp) stored in the binary format IML used until firmware
     version 1.32.
 
@@ -67,9 +122,11 @@ def read_bin(fn):
       the presence of feed force data
     """
 
-    def get_next_nbyte_string(f):
-        nbytes, = unpack("<B", f.read(1))
-        return f.read(nbytes).decode()
+    instream.seek(0)
+    
+    def get_next_nbyte_string(instream):
+        nbytes, = unpack("<B", instream.read(1))
+        return instream.read(nbytes).decode()
 
     def read_settings(b):
         return {
@@ -95,58 +152,58 @@ def read_bin(fn):
     hdr = {}
     settings = {}
     torques = []
-    with open(fn, 'rb') as f:
-        for field in [
-                'tooltype',
-                'unknown1',
-                'toolserial',
-                'firmware_version',
-                'SNRelectronic',
-                'hardwareVersion',
-                'date',
-                'time'
-        ]:
-            hdr[field] = get_next_nbyte_string(f)
 
-        # end-run around postgres not liking storing \u0000 in jsonb field
-        hdr['unknown1'] = None
+    for field in [
+            'tooltype',
+            'unknown1',
+            'toolserial',
+            'firmware_version',
+            'SNRelectronic',
+            'hardwareVersion',
+            'date',
+            'time'
+    ]:
+        hdr[field] = get_next_nbyte_string(instream)
 
-        hdr['measurement_number'] = unpack('<I', f.read(4))[0]
-        hdr['description'] = get_next_nbyte_string(f)
+    # end-run around postgres not liking storing \u0000 in jsonb field
+    hdr['unknown1'] = None
 
-        settings = f.read(81)
+    hdr['measurement_number'] = unpack('<I', instream.read(4))[0]
+    hdr['description'] = get_next_nbyte_string(instream)
 
-        for field in ['direction', 'species', 'location', 'name']:
-            hdr[field] = get_next_nbyte_string(f)
+    settings = instream.read(81)
+    
+    for field in ['direction', 'species', 'location', 'name']:
+        hdr[field] = get_next_nbyte_string(instream)
 
-        # ??????
-        hdr['unknown2'] = f.read(108)
+    # ??????
+    hdr['unknown2'] = instream.read(108)
 
-        # 'Assessment Blocks'
-        hdr['assessment'] = {}
-        for iass in range(6):
-            hdr['assessment'][iass] = [
-                unpack('<ff', f.read(8)),
-                get_next_nbyte_string(f)
-            ]
-
-        # comment(s)
-        comment_lines = [get_next_nbyte_string(f) for icomment in range(6)]
-        hdr['comment'] = "\t".join(comment_lines)
-
-        # extract settings
-        settings = read_settings(settings)
-
-        # torque data
-        # data stored as a sequence of little-endian 2-byte unsigned int
-        data = f.read()
-        i0 = 0
-        while True:
-            torques.append(unpack('<H', data[i0:i0+2])[0]/100)
-            i0 += 2
-            if i0+2 > len(data):
-                break
-        rem = data[i0:]
+    # 'Assessment Blocks'
+    hdr['assessment'] = {}
+    for iass in range(6):
+        hdr['assessment'][iass] = [
+            unpack('<ff', instream.read(8)),
+            get_next_nbyte_string(instream)
+        ]
+        
+    # comment(s)
+    comment_lines = [get_next_nbyte_string(instream) for icomment in range(6)]
+    hdr['comment'] = "\t".join(comment_lines)
+    
+    # extract settings
+    settings = read_settings(settings)
+    
+    # torque data
+    # data stored as a sequence of little-endian 2-byte unsigned int
+    data = instream.read()
+    i0 = 0
+    while True:
+        torques.append(unpack('<H', data[i0:i0+2])[0]/100)
+        i0 += 2
+        if i0+2 > len(data):
+            break
+    rem = data[i0:]
 
     # check that samples/mm * drill_depth = len(torques)
     assert len(rem) == 0, "%i bytes remain unprocessed" % len(rem)
@@ -173,8 +230,7 @@ def read_bin(fn):
     settings.pop('diameter_cm')
 
     # store the original file as a byte string
-    with open(fn, 'rb') as f:
-        settings['raw'] = f.read()
+    settings['raw'] = instream.getvalue()
 
     return {
         'header': hdr,
@@ -184,7 +240,7 @@ def read_bin(fn):
         }
 
 
-def read_txt1(fn):
+def read_txt1(instream):
     """Read a trace (*.txt) exported from PD-Tools in the ASCII format IML used
     in v1.22.
     """
@@ -244,7 +300,7 @@ def read_txt1(fn):
             feed = None
         return drill, feed
 
-    lines = [line.strip() for line in open(fn, 'r')]
+    lines = [line.strip() for line in instream]
     drill, feed = read_drill_feed(lines)
     return {
         'header': read_header(lines),
@@ -254,7 +310,7 @@ def read_txt1(fn):
     }
 
 
-def read_txt2(fn):
+def read_txt2(instream):
     """Read a trace (*.txt) exported from PD-Tools in the ASCII format IML used
     in v1.67
     """
@@ -298,7 +354,7 @@ def read_txt2(fn):
             'comment': lines[9],
         }
 
-    lines = [line.strip() for line in open(fn, 'r')]
+    lines = [line.strip() for line in instream]
     return {
         'header': read_header(lines),
         'drill': [float(x) for x in lines[252].split(",")],
@@ -307,7 +363,7 @@ def read_txt2(fn):
     }
 
 
-def read_json(fn):
+def read_json(instream):
     """Read a trace (*.rgp) JSON format IML used in firmwares after 1.32
     """
 
@@ -351,9 +407,9 @@ def read_json(fn):
         }
 
     try:
-        J, raw = load_iml_json(fn)
+        J, raw = load_iml_json(instream)
     except Exception as err:
-        raise ValueError(f'{fn}:{err}. Invalid JSON?')
+        raise ValueError(f'{err}. Invalid JSON?')
     assert J["device"] == "0F02"
     assert J["version"] == 2
 
@@ -402,8 +458,8 @@ def read_json(fn):
     }
 
 
-def read_pdc(fn):
-    return read_json(fn)
+def read_pdc(instream):
+    return read_json(instream)
 
 
 def create_jdata(mapdict, meta, data):
@@ -559,11 +615,39 @@ class Trace():
             'txt2': read_txt2,
             'json': read_json,
             }[self.trace_format]
-        res = read(self.trace_filename)
+        res = read(open(self.trace_filename, 'rb'))
         self.header = res['header']
         self.settings = res['settings']
         self.drill = res['drill']
         self.feed = res['feed']
+
+    def from_bytes(self, trbytes):
+        """Read a trace from byte string.
+
+        File Formats:
+
+        - "bin" - a binary format for traces (*.rgp files) downloaded from
+           instruments using firmware prior to 1.32
+        - "json" - traces downloaded from instruments using firmware >1.32
+        - "pdc" - format used by IML iPad app
+        - "txt1" - txt format exported by PD-Tools v 1.22
+        - "txt2" - txt format exported by PD-Tools v 1.67
+        """
+        import io
+        self.trace_format = identify_format_bytes(trbytes)
+        read = {
+            'bin':  read_bin,
+            'pdc':  read_pdc,
+            'txt1': read_txt1,
+            'txt2': read_txt2,
+            'json': read_json,
+            }[self.trace_format]
+        res = read(io.BytesIO(trbytes))
+        self.header = res['header']
+        self.settings = res['settings']
+        self.drill = res['drill']
+        self.feed = res['feed']
+        self.raw = trbytes
 
     def hash(self):
         # use md5 (rather than sha256 for example) only because it creates

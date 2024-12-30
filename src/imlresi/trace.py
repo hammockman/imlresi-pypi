@@ -650,9 +650,11 @@ class Trace():
     def plot(self, axs=None):
         if axs is None:
             from matplotlib import pyplot as plt
-            fig, axs = plt.subplots(2, 1, figsize=(15,5))
-        ax.plot(self.drill)
+            fig, axs = plt.subplots(1, 2, figsize=(20,2))
+        axs[0].plot(self.drill);
+        axs[1].plot(self.feed)
 
+        return axs
 
 if __name__ == "__main__":
 

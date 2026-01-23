@@ -39,8 +39,6 @@ def identify_format(fn):
     """
     with open(fn, 'rb') as f:
         byte1 = bytes(f.read(1))
-    with open(fn, 'rb') as f:
-        byte1 = bytes(f.read(1))
     if byte1 == b'\x12':
         fmt = 'bin'
     elif byte1 == b'\x7b':  # '{'=='\x7b'

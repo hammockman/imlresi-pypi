@@ -592,7 +592,7 @@ class Trace():
         Ideally the output of this should be able to be read back into
         PD-Tools. Currently it cannot.
         """
-        if self.trace_format == "json":
+        if self.trace_format in ("json", "pdc"):
             J = json.loads(self.settings['raw'])
         else:
             J = create_jdata(

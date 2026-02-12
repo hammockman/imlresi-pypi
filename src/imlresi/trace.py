@@ -2,6 +2,8 @@
 """
 ***** THIS SOFTWARE IS UNOFFICAL AND HAS NOTHING TO DO WITH IML *****
 
+***** THIS IS NOT STABLE OR PRODUCTION READY. YOU HAVE BEEN WARNED *****
+
 History:
 
 * Originally developed as rgp.py for ResiImportApp.
@@ -9,7 +11,7 @@ History:
 * Used with OFO1 data loading
 * Transition to PyPi package
 
-
+jh, Feb 2026
 jh, Mar 2022
 jh, Jun 2021
 jh, Jun 2020
@@ -408,7 +410,7 @@ def read_pdc(fn):
 
 def create_jdata(mapdict, meta, data):
     """
-    Initialise an object with the same structure as the json trace format.
+    Initialise an object with the same structure as the .rgp json trace format.
 
     data can have keys drill and feed
 

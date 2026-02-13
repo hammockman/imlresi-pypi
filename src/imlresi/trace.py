@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""
-***** THIS SOFTWARE IS UNOFFICAL AND HAS NOTHING TO DO WITH IML *****
+"""***** THIS SOFTWARE IS UNOFFICAL AND HAS NOTHING TO DO WITH IML *****
 
 ***** THIS IS NOT STABLE OR PRODUCTION READY. YOU HAVE BEEN WARNED *****
 
 
 Design Notes:
 
-- the weird distinction between 'header' and 'settings' orginated with the reverse engineering of the .rgp binary format
+- the weird distinction between 'header' and 'settings' orginated with
+  the reverse engineering of the .rgp binary format
 
 
 
@@ -38,11 +38,12 @@ jh, Mar 2022
 jh, Jun 2021
 jh, Jun 2020
 jh, June 2016
+
 """
 
 from struct import unpack
 import logging
-import ujson as json # faster; minifies by default
+import ujson as json  # faster; minifies by default
 
 
 def load_iml_json(fn):
@@ -53,7 +54,7 @@ def load_iml_json(fn):
     the "remark field. This breaks JSON parsers.
     """
     s = open(fn, 'r').read()
-    s = s.replace("\t","\\t")
+    s = s.replace("\t", "\\t")
     return json.loads(s), s
 
 
@@ -101,7 +102,7 @@ def read_bin(fn):
             'max_drill_depth':      unpack('<I', b[:4])[0]/10.,
             'depth_mode':           unpack('<B', b[4:5])[0],  # this is just a guess; need to set this in instrument and check
             'preselected_depth':    unpack('<I', b[5:9])[0],  # this is just a guess; need to set this in instrument and check
-            'drill_depth':          unpack('<I', b[9:13])[0]/10., # mm
+            'drill_depth':          unpack('<I', b[9:13])[0]/10.,  # mm
             'feed_speed':           unpack('<I', b[13:17])[0]/10.,
             'resolution_amplitude': unpack('<I', b[17:21])[0],
             'samples_per_mm':       float(unpack('<B', b[21:22])[0]),
@@ -183,7 +184,6 @@ def read_bin(fn):
             torques = torques[:int(npts)]
         else:
             logging.warning("number of data points (%i) does not match samples_per_mm*drill_depth (%i)" % (len(torques), npts))
-
 
     # drop fields that are of no interest or that have uncertain
     # correspondence to keys in JSON trace format

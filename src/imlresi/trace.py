@@ -643,7 +643,10 @@ class Trace():
         return self.header['description']
 
     def get_location(self):
-        return self.header['location']
+        try:
+            return self.header['location']
+        except KeyError:
+            return None
 
     def get_latlon(self):
         # loc: 25.95124° S, 152.68906° E (± 5 m)

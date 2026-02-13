@@ -85,7 +85,14 @@ def test_Trace():
         assert tr.header['location']==loc
 
 
-
+def test_accessors():
+    from datetime import datetime
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+    assert tr.get_resiId() == 'TEST 7'
+    assert tr.get_drilltime().strftime('%Y%m%dT%H:%M:%S') == '20210330T15:20:05'
+    assert tr.get_location() == '26.06952° S, 152.77024° E (± 4.69584 m)'
+    assert tr.get_latlon() == (-26.06952, 152.77024, 4.69584)
 
 # todo: test Trace.__str__()
 

@@ -642,6 +642,26 @@ class Trace():
     def get_resiId(self):
         return self.header['description']
 
+    def get_location(self):
+        return self.header['location']
+
+    def get_latlon(self):
+        # loc: 25.95124° S, 152.68906° E (± 5 m)
+        import re
+        try:
+            lat, lon, dx = map(
+                float,
+                re.match(
+                    r'^([\d\.]+)° S, ([\d\.]+)° E \(± ([\d\.]+) m\)',
+                    self.get_location()
+                ).groups()
+            )
+        except AttributeError:
+            #print(loc)
+            return None, None, None
+        else:
+            return -lat, lon, dx
+
     def get_drilltime(self):
         # The weird way this is done (each read function returns date
         # and time as strings) is a consequence of dev history. One

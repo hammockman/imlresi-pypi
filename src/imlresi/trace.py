@@ -198,13 +198,14 @@ def read_bin(fn):
 
     # store the original file as a byte string
     with open(fn, 'rb') as f:
-        settings['raw'] = f.read()
+        raw = f.read()
 
     return {
         'header': hdr,
         'drill': torques,
         'feed': feeds,
-        'settings': settings
+        'settings': settings,
+        'raw': raw,
         }
 
 
@@ -215,7 +216,6 @@ def read_txt1(fn):
 
     def read_settings(lines):
         return {
-            'raw': "\n".join(lines),
             'max_drill_depth': int(lines[10])/10.,
             #'depth_mode': None,
             #'preselected_depth': None,
@@ -271,6 +271,7 @@ def read_txt1(fn):
     lines = [line.strip() for line in open(fn, 'r')]
     drill, feed = read_drill_feed(lines)
     return {
+        'raw': "\n".join(lines),
         'header': read_header(lines),
         'drill': drill,
         'feed':  feed,
@@ -285,7 +286,6 @@ def read_txt2(fn):
 
     def read_settings(lines):
         return {
-            'raw': "\n".join(lines),
             'max_drill_depth': int(float(lines[18])*100.)/10.,
             'depth_mode': 0, # fixme
             #'preselected_depth': None,
@@ -324,6 +324,7 @@ def read_txt2(fn):
 
     lines = [line.strip() for line in open(fn, 'r')]
     return {
+        'raw': "\n".join(lines),
         'header': read_header(lines),
         'drill': [float(x) for x in lines[252].split(",")],
         'feed': [float(x) for x in lines[253].split(",")],
@@ -340,9 +341,8 @@ def read_json(fn):
 
     """
 
-    def read_settings(J, raw):
+    def read_settings(J):
         return {
-            'raw': raw,
             'max_drill_depth': int(J['header']['deviceLength']*100)/10., # mm
             'depth_mode': J['header']['depthMode'],
             #'preselected_depth': None,
@@ -447,10 +447,11 @@ def read_json(fn):
         J['app']['object'] = [None, None, None, None, None]
 
     return {
+        'raw': raw,
         'header': read_header(J),
         'drill': J["profile"]["drill"],
         'feed': J["profile"]["feed"],
-        'settings': read_settings(J, raw)
+        'settings': read_settings(J)
     }
 
 
@@ -556,23 +557,25 @@ class Trace():
             self.settings = {}
             self.drill = json_data['profile']['drill']
             self.feed = json_data['profile']['feed']
+            self.raw = json_string
         else:
             self.header = {}
             self.settings = {}
             self.drill = []
             self.feed = []
+            self.raw = None
 
     def __str__(self):
         s = '*** HEADER ***\n'
         for k, v in self.header.items():
-            if (k == 'raw'):
-                continue
+#            if (k == 'raw'):
+#                continue
             s += '%s: %s\n' % (k, v)
         if self.settings is not None:
             s += '*** SETTINGS ***\n'
             for k, v in self.settings.items():
-                if (k[:3] == 'raw'):
-                    continue
+#                if (k[:3] == 'raw'):
+#                    continue
                 s += '%s: %s\n' % (k, v)
         s += '*** DRILL FORCE (TORQUE) ***\n'
         if len(self.drill) > 20:
@@ -612,6 +615,7 @@ class Trace():
             'txt2': read_txt2,
             }[self.trace_format]
         res = read(self.trace_filename)
+        self.raw = res['raw']
         self.header = res['header']
         self.settings = res['settings']
         self.drill = res['drill']
@@ -645,7 +649,7 @@ class Trace():
         PD-Tools. Currently it cannot.
         """
         if self.trace_format in ("json", "pdc"):
-            J = json.loads(self.settings['raw'])
+            J = json.loads(self.raw)
         else:
             J = create_jdata(
                 {

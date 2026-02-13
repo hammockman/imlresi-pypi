@@ -334,23 +334,45 @@ def read_json(fn):
         }
 
     def read_header(J):
-        return {
-            #'tooltype': None,
-            'toolserial': J['header']['snrMachine'],
-            'firmware_version': J['header']['verFirmware'],
-            'SNRelectronic': J['header']['snrElectronic'],
-            'hardwareVersion': J['header']['verElectronic'],
-            'date': J['header']['date'],
-            'time': J['header']['time'],
-            'measurement_number': J['header']['number'],
-            'description': J['header']['idNumber'],
-            'direction': J['app']['object'][1],
-            'species': J['app']['object'][2],
-            'location': J['app']['object'][3],
-            'name': J['app']['object'][4],
-            #'assessment': {},
-            'comment': J['header']['remark'],
-        }
+        try:
+            # this will work if .pdc
+            return {
+                #'tooltype': None,
+                'toolserial': J['header']['snrMachine'],
+                'firmware_version': J['header']['verFirmware'],
+                'SNRelectronic': J['header']['snrElectronic'],
+                'hardwareVersion': J['header']['verElectronic'],
+                'date': J['header']['date'],
+                'time': J['header']['time'],
+                'measurement_number': J['header']['number'],
+                'description': J['header']['idNumber'],
+                'direction': J['header']['direction'],
+                'species': J['header']['species'],
+                'location': J['header']['location'],
+                'name': J['header']['name'],
+                #'assessment': {},
+                'comment': J['header']['remark'],
+            }
+        except KeyError:
+            # but if .rgp this will work, but might get name,
+            # location, direction, etc from dummy data inserted below
+            return {
+                #'tooltype': None,
+                'toolserial': J['header']['snrMachine'],
+                'firmware_version': J['header']['verFirmware'],
+                'SNRelectronic': J['header']['snrElectronic'],
+                'hardwareVersion': J['header']['verElectronic'],
+                'date': J['header']['date'],
+                'time': J['header']['time'],
+                'measurement_number': J['header']['number'],
+                'description': J['header']['idNumber'],
+                'direction': J['app']['object'][1],
+                'species': J['app']['object'][2],
+                'location': J['app']['object'][3],
+                'name': J['app']['object'][4],
+                #'assessment': {},
+                'comment': J['header']['remark'],
+            }
 
     try:
         J, raw = load_iml_json(fn)
@@ -394,6 +416,7 @@ def read_json(fn):
     if 'app' not in J:
         J['app'] = {}
     if 'object' not in J['app']:
+        # 0.?, 1.direction, 2.species, 3.location, 4.name
         J['app']['object'] = [None, None, None, None, None]
 
     return {

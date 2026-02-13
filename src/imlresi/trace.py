@@ -4,6 +4,28 @@
 
 ***** THIS IS NOT STABLE OR PRODUCTION READY. YOU HAVE BEEN WARNED *****
 
+
+Design Notes:
+
+- the weird distinction between 'header' and 'settings' orginated with the reverse engineering of the .rgp binary format
+
+
+
+
+Todo:
+
+- merge 'header' and 'settings' (as 'meta'?)
+- used imutable namedtuple instead dicts as the class base data stores
+- accessors?
+- trace checks:
+  - underload
+  - overload
+  - etc
+- move to using pyproject.toml instead of setup.py
+- fix trace stability and tox test
+
+
+
 History:
 
 * Originally developed as rgp.py for ResiImportApp.
@@ -311,6 +333,11 @@ def read_txt2(fn):
 
 def read_json(fn):
     """Read a trace (*.rgp) JSON format IML used in firmwares after 1.32
+
+    The .pdc json is very similar, but has fields in 'header' that the
+    .rgp version stored in 'app', presumably because they were added
+    via the app in a post-processing step???
+
     """
 
     def read_settings(J, raw):
@@ -579,10 +606,10 @@ class Trace():
         self.trace_format = identify_format(self.trace_filename)
         read = {
             'bin':  read_bin,
+            'json': read_json,
             'pdc':  read_pdc,
             'txt1': read_txt1,
             'txt2': read_txt2,
-            'json': read_json,
             }[self.trace_format]
         res = read(self.trace_filename)
         self.header = res['header']

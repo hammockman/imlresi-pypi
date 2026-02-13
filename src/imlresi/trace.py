@@ -642,6 +642,13 @@ class Trace():
     def get_resiId(self):
         return self.header['description']
 
+    def get_drilltime(self):
+        # The weird way this is done (each read function returns date
+        # and time as strings) is a consequence of dev history. One
+        # day it might be sane-ified
+        from datetime import datetime
+        return datetime.strptime(self.header['date'] + 'T' + self.header['time'], '%d.%m.%YT%H:%M:%S')
+
     def to_json(self):
         """Regenerate a json format trace.
 

@@ -700,6 +700,10 @@ class Trace():
         from datetime import datetime
         return datetime.strptime(self.header['date'] + 'T' + self.header['time'], '%d.%m.%YT%H:%M:%S')
 
+    def get_tilt(self):
+        if self.settings['tiltOn']: return None
+        return self.settings['tiltAngle']
+
     def to_json(self):
         """Regenerate a json format trace.
 

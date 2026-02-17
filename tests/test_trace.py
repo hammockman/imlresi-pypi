@@ -120,6 +120,10 @@ def test_accessors():
     assert tr.get_drilltime().strftime('%Y%m%dT%H:%M:%S') == '20210330T15:20:05'
     assert tr.get_location() == '26.06952° S, 152.77024° E (± 4.69584 m)'
     assert tr.get_latlon() == (-26.06952, 152.77024, 4.69584)
+    assert tr,get_tilt() == 88.8
+
+    #tr.read('tests/data/1-131-')
+
 
 # todo: test Trace.__str__()
 

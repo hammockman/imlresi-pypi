@@ -480,6 +480,8 @@ def create_jdata(mapdict, meta, data):
     """
     Initialise an object with the same structure as the .rgp json trace format.
 
+    The .pdc JSON is similar but not identical (date, extar fields, ...)
+
     data can have keys drill and feed
 
     Todo:
@@ -666,7 +668,13 @@ class Trace():
             return None
 
     def get_latlon(self):
-        # loc: 25.95124° S, 152.68906° E (± 5 m)
+        """Extract latitude, longitude and accuracy from .pdc style
+        location stamp:
+
+             "25.95124° S, 152.68906° E (± 5 m)"
+
+        Currently assumes Southern hemisphere :)
+        """
         import re
         try:
             lat, lon, dx = map(
@@ -699,6 +707,11 @@ class Trace():
             J = json.loads(self.raw)
         else:
             J = create_jdata(
+                # This arg is a dict that maps output field to a
+                # funtion that will pull the corresponding value from
+                # the trace object. I can't remember why I'm doing
+                # this such a weird way, but there's probably a
+                # rooted-in-history reason.
                 {
                     "snrMachine": lambda x: x['toolserial'],
                     "verFirmware": lambda x: x['firmware_version'],

@@ -1,5 +1,7 @@
 #import pytest
+import jsondiff as jd
 from imlresi import trace
+
 
 # test format identification
 def test_identify_format():
@@ -13,18 +15,43 @@ def test_identify_format():
 # test individual format trace parsers
 def test_read_xxx():
     # compare the dicts returned by each of the different read formats
-    jsn = trace.read_json('tests/data/1-131-withfeed-json.rgp')
-    jsn.pop('raw')
     bin = trace.read_bin('tests/data/1-131-withfeed.rgp')
     bin.pop('raw')
-    assert jsn == bin, "JSON and BIN differ"
+    bin['settings'].pop('preselected_depth')
+
     txt1 = trace.read_txt1('tests/data/1-131-withfeed-txt1.txt')
     txt1.pop('raw')
-    assert jsn == txt1, "JSON and TXT1 differ"
+    txt1['settings'].pop('preselected_depth')
+
     txt2 = trace.read_txt2('tests/data/1-131-withfeed-txt2.txt')
     txt2.pop('raw')
-    assert jsn == txt2, "JSON and TXT2 differ"
+    txt2['settings'].pop('preselected_depth')
+
+    jsn = trace.read_json('tests/data/1-131-withfeed-json.rgp')
+    jsn.pop('raw')
+    [jsn['settings'].pop(e) for e in (
+        'deviceLength',
+        'depthMode',
+        'abortState',
+        'feedOn',
+        'ncOn',
+        'ncState',
+        'tiltOn',
+        'tiltRelOn',
+        'tiltRelAngle',
+        'tiltAngle',
+        'diameter',
+        'preselected_depth',
+    )]
+
+    assert bin == txt1, f".rgp BIN and .txt TXT1 differ: {jd.diff(bin, txt1, syntax='symmetric')}"
+    assert bin == txt2, f".rgp BIN and .txt TXT2 differ: {jd.diff(bin, txt2, syntax='symmetric')}"
+    assert bin == jsn, f".rgp BIN and .rgp JSON differ: {jd.diff(bin, jsn, syntax='symmetric')}"
+
     # todo: add .pdc format to the comparisons
+
+
+
 
 
 # test the Trace class

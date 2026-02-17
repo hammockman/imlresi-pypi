@@ -561,7 +561,10 @@ def create_jdata(mapdict, meta, data):
         f = mapdict[k]
         if not f:
             continue
-        rgp['header'][k] = f(meta)
+        try:
+            rgp['header'][k] = f(meta)
+        except KeyError:
+            rgp['header'][k] = None
 
     return rgp
 

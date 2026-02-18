@@ -25,7 +25,7 @@ def read(*names, **kwargs):
 
 setup(
     name='imlresi',
-    version='0.0.10',
+    version='0.0.11',
     license='MIT',
     description='Tools for dealing with IML-Resi PowerDrill data.',
     long_description=read('README.md'),

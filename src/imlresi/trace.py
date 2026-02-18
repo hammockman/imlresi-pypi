@@ -704,6 +704,12 @@ class Trace():
         if self.settings['tiltOn']: return None
         return self.settings['tiltAngle']
 
+    def get_comment(self):
+        return self.header['comment']
+
+    def get_remark(self):
+        return self.header['comment']
+
     def to_json(self):
         """Regenerate a json format trace.
 

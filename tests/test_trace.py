@@ -121,6 +121,8 @@ def test_accessors():
     assert tr.get_location() == '26.06952° S, 152.77024° E (± 4.69584 m)'
     assert tr.get_latlon() == (-26.06952, 152.77024, 4.69584)
     assert tr,get_tilt() == 88.8
+    assert tr.get_comment() == "00-0-00-01"
+    assert tr.get_remark() == "00-0-00-01"
 
     #tr.read('tests/data/1-131-')
 

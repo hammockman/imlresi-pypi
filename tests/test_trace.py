@@ -123,6 +123,10 @@ def test_accessors():
     assert tr,get_tilt() == 88.8
     assert tr.get_comment() == "00-0-00-01"
     assert tr.get_remark() == "00-0-00-01"
+    assert tr.get_instrument() == "PD500-0755"
+    assert tr.get_feedspeed() == 200
+    assert tr.get_rpm() == 3500
+    assert tr.get_measnumber() == 41
 
     #tr.read('tests/data/1-131-')
 

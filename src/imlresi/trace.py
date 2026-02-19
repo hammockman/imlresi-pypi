@@ -710,6 +710,18 @@ class Trace():
     def get_remark(self):
         return self.header['comment']
 
+    def get_instrument(self):
+        return self.header['toolserial']
+
+    def get_feedspeed(self):
+        return self.settings['feed_speed']
+
+    def get_rpm(self):
+        return self.settings['needle_speed']
+
+    def get_measnumber(self):
+        return self.header['measurement_number']
+
     def to_json(self):
         """Regenerate a json format trace.
 

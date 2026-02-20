@@ -701,7 +701,7 @@ class Trace():
         return datetime.strptime(self.header['date'] + 'T' + self.header['time'], '%d.%m.%YT%H:%M:%S')
 
     def get_tilt(self):
-        if self.settings['tiltOn']: return None
+        if not self.settings['tiltOn']: return None
         return self.settings['tiltAngle']
 
     def get_comment(self):

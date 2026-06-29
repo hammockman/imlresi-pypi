@@ -789,6 +789,9 @@ class Trace():
 
         return json.dumps(J)  # this is a str *NOT* bytes
 
+    def to_dict(self):
+        return ujson.loads(self.to_json())
+
     def plot(self, axs=None):
         if axs is None:
             from matplotlib import pyplot as plt

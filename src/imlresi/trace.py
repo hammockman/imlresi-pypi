@@ -33,6 +33,9 @@ History:
 * Used with OFO1 data loading
 * Transition to PyPi package
 
+
+
+jh, Jun 2026
 jh, Feb 2026
 jh, Mar 2022
 jh, Jun 2021
@@ -800,6 +803,64 @@ class Trace():
         axs[1].plot(self.feed)
 
         return axs
+
+    def process_using_resiapi(self, api_uri, ctrlset=None, annotation=None):
+
+        def push_through_api(inp, uri):
+            """
+            inp is a dict containing trace, ctrl and annotation data
+
+            Returns a dict holding the processed data
+            """
+            res = requests.post(
+                uri,
+                json=inp,
+                #verify=False,
+                #verify="/etc/letsencrypt/live/lin1.aliente.ch/fullchain.pem",
+                verify=certifi.where(),
+            )
+            # requests is supposed to use certifi by default, but for some reason
+            # it doesn't unless verify=certifi.where() is supplied!!!
+            if res.status_code != 200:
+                print(res.status_code, type(res.status_code), res.status_code==500, res.text)
+                if res.status_code in (401, 403, 500, 503):
+                    # either the API server is down or auth issues
+                    raise ValueError(f'API failure {res.status_code}: contact jh@aliente.ch')
+                else:
+                    raise ValueError(f'POST {uri} returns {res.status_code}')
+
+            return res.json()
+
+        # augment trace with control parameters
+        inp = ctrlset | {'rgp': trace}
+
+        # check that trace_format is specified
+        if "trace_format" not in inp:
+            inp["trace_format"] = "RGP" if ("dateYear" in inp['rgp']['header']) else "PDC"
+
+        # maybe combine with annotation data
+        if annotation is not None:
+            inp = inp | {'feature.locations': annotation}
+
+        inphash = myhash(inp)
+
+        # push trace through Resi API
+        try:
+            res = push_through_api(inp, api_uri)
+        except ValueError as err:
+            logger.error(f'API call failed {tracefile.name}. {type(err)}: {err}')
+            raise ValueError('API ValueError')
+        except Exception as err:
+            logger.error(f'API call failed {tracefile.name}. {type(err)}: {err}')
+            raise ValueError('API Exception')
+
+
+        res['inphash'] = inphash
+
+        return res
+
+
+
 
 if __name__ == "__main__":
 

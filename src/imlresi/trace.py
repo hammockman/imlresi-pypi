@@ -102,8 +102,8 @@ def read_bin(fn):
             'max_drill_depth':      unpack('<I', b[:4])[0]/10.,
             'depth_mode':           unpack('<B', b[4:5])[0],  # this is just a guess; need to set this in instrument and check
             'preselected_depth':    unpack('<I', b[5:9])[0],  # this is just a guess; need to set this in instrument and check
-            'drill_depth':          unpack('<I', b[9:13])[0]/10.,  # mm
-            'feed_speed':           unpack('<I', b[13:17])[0]/10.,
+            'drill_depth':          unpack('<I', b[9:13])[0]/10,  # mm
+            'feed_speed':           unpack('<I', b[13:17])[0]/10,
             'drill_resolution': unpack('<I', b[17:21])[0],
             'feed_resolution':       float(unpack('<B', b[21:22])[0]),
             'samples_per_mm':       float(unpack('<B', b[21:22])[0]),
@@ -217,19 +217,19 @@ def read_txt1(fn):
 
     def read_settings(lines):
         return {
-            'max_drill_depth': int(lines[10])/10.,
+            'max_drill_depth': int(lines[10])/10,
             #'depth_mode': None,
             'preselected_depth': None,
-            'drill_depth':  int(lines[13])/10.,
-            'feed_speed': int(lines[14])/10.,
+            'drill_depth':  int(lines[13])/10,
+            'feed_speed': int(lines[14])/10,
             'drill_resolution': int(lines[9]),  # 10000
             'feed_resolution': int(lines[8]),  # 10000
             'samples_per_mm': float(lines[8]),  # 010
             'drill_motor_offset': int(lines[17]),  # possibly in lines[16:19]
             'feed_motor_offset': int(lines[16]),  # possibly in lines[16:19]
             'needle_speed': int(lines[15]),
-            'max_drill_amplitude': int(lines[18])/100.,  # possibly in lines[16:19]
-            'max_feed_amplitude': int(lines[19])/100.,  # possibly in lines[16:19]
+            'max_drill_amplitude': int(lines[18])/100,  # possibly in lines[16:19]
+            'max_feed_amplitude': int(lines[19])/100,  # possibly in lines[16:19]
             #'abort_reason': None,
             #'diameter_cm': int(lines[111])/100.,
             #'level_cm': int(lines[112])/100.,
@@ -346,14 +346,14 @@ def read_json(fn):
 
     def read_settings(J):
         return {
-            'max_drill_depth': int(J['header']['deviceLength']*100)/10., # mm
+            'max_drill_depth': int(J['header']['deviceLength']*100)/10, # mm
             'depth_mode': J['header']['depthMode'],
             'preselected_depth':  J['header']['depthPresel'],  # 0.00,
-            'drill_depth':  J['header']['depthMsmt']*10., # mm
+            'drill_depth':  J['header']['depthMsmt']*10, # mm
             'feed_speed': J['header']['speedFeed'],
             'drill_resolution': J['header']['resolutionAmp'], # 10000
             "feed_resolution": J['header']['resolutionFeed'], # 10
-            'samples_per_mm': J['header']['resolutionAmp']/1000.,  # a total guess
+            'samples_per_mm': J['header']['resolutionAmp']/1000,  # a total guess
             'drill_motor_offset':  J['header']['offsetDrill'],
             'feed_motor_offset':   J['header']['offsetFeed'],
             'needle_speed': J['header']['speedDrill'],
@@ -507,12 +507,12 @@ def create_jdata(mapdict, meta, data):
             "number": 0,
             "idNumber": "?",  # user specified Id string
             "remark": "?",  # user specified comment string
-            "deviceLength": 0.,
+            "deviceLength": 0,
             "depthMode": 0,
-            "depthPresel": 0.,
-            "depthMsmt": 0.,
-            "ampMaxFeed": 0.,
-            "ampMaxDrill": 0.,
+            "depthPresel": 0,
+            "depthMsmt": 0,
+            "ampMaxFeed": 0,
+            "ampMaxDrill": 0,
             "abortState": 0,
             "feedOn": 0,
             "ncOn": 0,
@@ -525,7 +525,7 @@ def create_jdata(mapdict, meta, data):
             "offsetDrill": 0,
             "offsetFeed": 0,
             "resolutionAmp": 0,
-            "speedFeed": 0.,
+            "speedFeed": 0,
             "speedDrill": 0,
             "resolutionFeed": 0,
             "wiInstalled": 0,
@@ -702,7 +702,9 @@ class Trace():
 
     def get_tilt(self):
         if not self.settings['tiltOn']: return None
-        return self.settings['tiltAngle']
+        return float(self.settings['tiltAngle'])
+        # possibly tiltAngle is always reported as an int, but
+        # it's really a continuous variableso make it a float
 
     def get_comment(self):
         return self.header['comment']

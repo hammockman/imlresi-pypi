@@ -1,6 +1,33 @@
-#import pytest
+import os
+from pathlib import Path
+
+# Load .env file if it exists
+env_path = Path(__file__).parent.parent / '.env'
+if env_path.exists():
+    for line in env_path.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if line and not line.startswith('#') and '=' in line:
+            k, v = line.split('=', 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+import pytest
 import jsondiff as jd
 from imlresi import trace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # test format identification
@@ -182,7 +209,7 @@ def test_trace_to_json():
     assert "profile" in data
     assert "drill" in data["profile"]
     assert "feed" in data["profile"]
-    
+
     # Test on a binary .rgp file
     tr_bin = trace.Trace()
     tr_bin.read('tests/data/1-131-withfeed.rgp')
@@ -193,3 +220,47 @@ def test_trace_to_json():
     assert "profile" in data_bin
     assert "drill" in data_bin["profile"]
     assert "feed" in data_bin["profile"]
+
+
+def test_process_using_resiapi_mocked():
+    from unittest.mock import patch
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+
+    with patch('requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {"status": "success", "ring_count": 42}
+
+        # Test with default ctrlset
+        res = tr.process_using_resiapi('https://api.example.com/resi')
+        assert res["status"] == "success"
+        assert res["ring_count"] == 42
+
+        # Verify post parameters and payload
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        assert args[0] == 'https://api.example.com/resi'
+
+        json_payload = kwargs['json']
+        # Default ctrlset should be present
+        assert json_payload["RingMethod"] == "Annual"
+        assert json_payload["Resource"] == "RadiataPine"
+        assert json_payload["fixCoef"] is True
+        assert json_payload["Standardised"] is True
+        assert json_payload["BaselineMethod"] == "Linear"
+        assert json_payload["TreeClass"] == "Density"
+        # Trace should be present
+        assert "rgp" in json_payload
+        assert json_payload["rgp"]["header"]["idNumber"] == "TEST 7"
+
+
+@pytest.mark.skipif(
+    not os.environ.get("RESI_API_URI"),
+    reason="RESI_API_URI environment variable or .env file is not set"
+)
+def test_process_using_resiapi_real():
+    tr = trace.Trace()
+    tr.read('tests/data/1-131-withfeed-pdtools167.rgp')
+    api_uri = os.environ.get("RESI_API_URI")
+    res = tr.process_using_resiapi(api_uri)
+    assert isinstance(res, dict)

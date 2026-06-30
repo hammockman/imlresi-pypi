@@ -45,7 +45,7 @@ jh, June 2016
 """
 
 from struct import unpack
-import logging
+from loguru import logger
 import ujson as json  # faster; minifies by default
 
 
@@ -187,7 +187,7 @@ def read_bin(fn):
             feeds = torques[int(npts):]
             torques = torques[:int(npts)]
         else:
-            logging.warning("number of data points (%i) does not match samples_per_mm*drill_depth (%i)" % (len(torques), npts))
+            logger.warning("number of data points (%i) does not match samples_per_mm*drill_depth (%i)" % (len(torques), npts))
 
     # drop fields that are of no interest or that have uncertain
     # correspondence to keys in JSON trace format
@@ -556,7 +556,7 @@ def create_jdata(mapdict, meta, data):
             if data[k] is not None:
                 rgp['profile'][k] = list(map(float, data[k]))
         except KeyError:
-            logging.warning("missing %s data" % k)
+            logger.warning("missing %s data" % k)
 
     for k in rgp['header'].keys():
         if k not in mapdict:
@@ -589,6 +589,7 @@ class Trace():
             self.drill = []
             self.feed = []
             self.raw = None
+        _res = None  # placeholder for raw API results
 
     def __str__(self):
         s = '*** HEADER ***\n'
@@ -793,7 +794,7 @@ class Trace():
         return json.dumps(J)  # this is a str *NOT* bytes
 
     def to_dict(self):
-        return ujson.loads(self.to_json())
+        return json.loads(self.to_json())
 
     def plot(self, axs=None):
         if axs is None:
@@ -806,6 +807,9 @@ class Trace():
 
     def process_using_resiapi(self, api_uri, ctrlset=None, annotation=None):
 
+        import certifi
+        import requests
+
         def push_through_api(inp, uri):
             """
             inp is a dict containing trace, ctrl and annotation data
@@ -814,7 +818,7 @@ class Trace():
             """
             res = requests.post(
                 uri,
-                json=inp,
+                json=inp, # inp should be a dict()
                 #verify=False,
                 #verify="/etc/letsencrypt/live/lin1.aliente.ch/fullchain.pem",
                 verify=certifi.where(),
@@ -832,7 +836,16 @@ class Trace():
             return res.json()
 
         # augment trace with control parameters
-        inp = ctrlset | {'rgp': trace}
+        if ctrlset is None:
+            ctrlset = {
+                "RingMethod": "Annual",
+                "Resource": "RadiataPine",
+                "fixCoef": True,
+                "Standardised": True,
+                "BaselineMethod": "Linear",
+                "TreeClass": "Density",
+            }
+        inp = ctrlset | {'rgp': self.to_dict()}
 
         # check that trace_format is specified
         if "trace_format" not in inp:
@@ -842,24 +855,21 @@ class Trace():
         if annotation is not None:
             inp = inp | {'feature.locations': annotation}
 
-        inphash = myhash(inp)
+        print(inp)
 
         # push trace through Resi API
         try:
             res = push_through_api(inp, api_uri)
         except ValueError as err:
-            logger.error(f'API call failed {tracefile.name}. {type(err)}: {err}')
+            logger.error(f'API call failed {self.trace_filename}. {type(err)}: {err}')
             raise ValueError('API ValueError')
         except Exception as err:
-            logger.error(f'API call failed {tracefile.name}. {type(err)}: {err}')
+            logger.error(f'API call failed {self.trace_filename}. {type(err)}: {err}')
             raise ValueError('API Exception')
 
-
-        res['inphash'] = inphash
+        self._res = res  # keep a copy for accessor methods
 
         return res
-
-
 
 
 if __name__ == "__main__":

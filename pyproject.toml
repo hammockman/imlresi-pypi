@@ -1,3 +1,53 @@
 [build-system]
-requires = ["setuptools>=42"]
+requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "imlresi"
+version = "0.0.15"
+description = "Tools for dealing with IML-Resi PowerDrill data."
+readme = "README.md"
+authors = [
+    { name = "Jonathan Harrington", email = "jh@aliente.ch" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.6"
+dependencies = [
+    "ujson"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Unix",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/hammockman/imlresi-pypi"
+"Issue Tracker" = "https://github.com/hammockman/imlresi-pypi/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "jsondiff"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

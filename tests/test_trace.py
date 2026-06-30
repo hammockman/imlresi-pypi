@@ -32,7 +32,7 @@ def test_read_xxx():
 
     jsn = trace.read_json('tests/data/1-131-withfeed-json.rgp')
     jsn.pop('raw')
-    [jsn['settings'].pop(e) for e in (
+    for e in (
         'deviceLength',
         'depthMode',
         'abortState',
@@ -45,7 +45,8 @@ def test_read_xxx():
         'tiltAngle',
         'diameter',
         'preselected_depth',
-    )]
+    ):
+        jsn['settings'].pop(e, None)
 
     assert bin == txt1, f".rgp BIN and .txt TXT1 differ: {jd.diff(bin, txt1, syntax='symmetric')}"
     assert bin == txt2, f".rgp BIN and .txt TXT2 differ: {jd.diff(bin, txt2, syntax='symmetric')}"
@@ -140,7 +141,7 @@ def test_accessors():
     assert tr.get_drilltime().strftime('%Y%m%dT%H:%M:%S') == '20210330T15:20:05'
     assert tr.get_location() == '26.06952° S, 152.77024° E (± 4.69584 m)'
     assert tr.get_latlon() == (-26.06952, 152.77024, 4.69584)
-    assert tr,get_tilt() == 88.8
+    assert tr.get_tilt() == 88.8
     assert tr.get_comment() == "00-0-00-01"
     assert tr.get_remark() == "00-0-00-01"
     assert tr.get_instrument() == "PD500-0755"
@@ -150,11 +151,45 @@ def test_accessors():
 
     #tr.read('tests/data/1-131-')
 
+def test_trace_str():
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+    s = str(tr)
+    assert "*** HEADER ***" in s
+    assert "*** SETTINGS ***" in s
+    assert "*** DRILL FORCE (TORQUE) ***" in s
+    assert "*** FEED FORCE ***" in s
 
-# todo: test Trace.__str__()
+
+def test_trace_repr():
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+    r = repr(tr)
+    assert "Trace" in r
+    assert "trace_filename" in r
+    assert "trace_format" in r
 
 
-# todo: test Trace.__repr__()
-
-
-# todo: test Trace.to_json()
+def test_trace_to_json():
+    import json
+    # Test on a .pdc file
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+    js = tr.to_json()
+    assert isinstance(js, str)
+    data = json.loads(js)
+    assert "header" in data
+    assert "profile" in data
+    assert "drill" in data["profile"]
+    assert "feed" in data["profile"]
+    
+    # Test on a binary .rgp file
+    tr_bin = trace.Trace()
+    tr_bin.read('tests/data/1-131-withfeed.rgp')
+    js_bin = tr_bin.to_json()
+    assert isinstance(js_bin, str)
+    data_bin = json.loads(js_bin)
+    assert "header" in data_bin
+    assert "profile" in data_bin
+    assert "drill" in data_bin["profile"]
+    assert "feed" in data_bin["profile"]

@@ -855,8 +855,6 @@ class Trace():
         if annotation is not None:
             inp = inp | {'feature.locations': annotation}
 
-        print(inp)
-
         # push trace through Resi API
         try:
             res = push_through_api(inp, api_uri)

@@ -576,7 +576,6 @@ class Trace():
 
     def __init__(self, json_string=None):
         if json_string is not None:
-            import json
             json_data = json.loads(json_string)
             self.header = json_data['header']
             self.settings = {}

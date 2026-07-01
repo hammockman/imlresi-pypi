@@ -264,3 +264,105 @@ def test_process_using_resiapi_real():
     api_uri = os.environ.get("RESI_API_URI")
     res = tr.process_using_resiapi(api_uri)
     assert isinstance(res, dict)
+
+
+def test_new_trace_accessors():
+    import numpy as np
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+    
+    # Verify behavior before processing
+    assert tr.get_result('TraceType') is None
+    
+    # Mock _res API dictionary for a B-B trace
+    tr._res = {
+        'TraceType': 'B-B',
+        'DOB': 10.0,
+        'BarkThickness': 2.0,
+        'UBDIA': 6.0,
+        'EntryRadius': 5.0,
+    }
+    
+    assert tr.get_tracetype() == 'B-B'
+    assert tr.get_dob() == 10.0
+    assert tr.get_pith() == 5.0
+    
+    cambial = tr.get_cambial_boundaries()
+    assert cambial.entry == 2.0
+    assert cambial.exit == 8.0 # BarkThickness (2) + UBDIA (6)
+    
+    bark = tr.get_bark_thickness()
+    assert bark.entry == 2.0
+    assert bark.exit == 4.0 # DOB (10) - UBDIA (6)
+
+    # Mock _res API dictionary for a P-B trace
+    tr._res = {
+        'TraceType': 'P-B',
+        'DBHOB': 12.0,
+        'BarkThickness': 3.0,
+        'UBDIA': 8.0,
+        'EntryRadius': 6.0,
+    }
+    
+    assert tr.get_tracetype() == 'P-B'
+    assert tr.get_dob() == 12.0 # fallback to DBHOB
+    assert tr.get_pith() == 6.0
+    
+    cambial_pb = tr.get_cambial_boundaries()
+    assert cambial_pb.entry == 3.0
+    assert cambial_pb.exit is None
+    
+    bark_pb = tr.get_bark_thickness()
+    assert bark_pb.entry == 3.0
+    assert bark_pb.exit is None
+
+    # Test failure case when neither DOB nor DBHOB is available
+    tr._res = {'TraceType': 'B-B'}
+    with pytest.raises(KeyError, match="Neither DOB or DBHOB are available"):
+        tr.get_dob()
+
+    # Verify get_wood_only
+    # Mock tr.drill and tr.feed to be numpy arrays
+    tr.drill = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+    tr.feed = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    
+    # Case P-B: entry=0.1, pith=0.3
+    tr._res = {
+        'TraceType': 'P-B',
+        'BarkThickness': 0.1,
+        'EntryRadius': 0.3,
+    }
+    wood = tr.get_wood_only()
+    # ii indices: self.x >= 0.1 and self.x <= 0.3 -> indices 1, 2, 3 (self.x = [0.0, 0.1, 0.2, 0.3, 0.4])
+    assert np.array_equal(wood.x, np.array([0.1, 0.2, 0.3]))
+    assert np.array_equal(wood.drill, np.array([20.0, 30.0, 40.0]))
+    assert np.array_equal(wood.feed, np.array([2.0, 3.0, 4.0]))
+
+    # Case B-B: entry=0.1, exit=0.3
+    tr._res = {
+        'TraceType': 'B-B',
+        'BarkThickness': 0.1,
+        'UBDIA': 0.2,
+    }
+    wood_bb = tr.get_wood_only()
+    # ii indices: self.x > 0.1 and self.x < 0.3 (actually 0.30000000000000004 due to float addition) -> index 2, 3
+    assert np.array_equal(wood_bb.x, np.array([0.2, 0.3]))
+    assert np.array_equal(wood_bb.drill, np.array([30.0, 40.0]))
+    assert np.array_equal(wood_bb.feed, np.array([3.0, 4.0]))
+
+    # Verify check_lopsidedness warning on P-B
+    tr._res['TraceType'] = 'P-B'
+    assert tr.check_lopsidedness() is None
+
+    # Case B-B for check_lopsidedness
+    tr._res = {
+        'TraceType': 'B-B',
+        'BarkThickness': 0.0,
+        'UBDIA': 0.4,
+    }
+    # wood_bb will contain elements 1, 2, 3 (indices > 0 and < 0.4)
+    # wood_bb.x = [0.1, 0.2, 0.3]
+    # wood_bb.drill = [20.0, 30.0, 40.0] -> slope = 100.0
+    assert tr.check_lopsidedness(ddrill_dx_max=50.0) == True
+    assert tr.check_lopsidedness(ddrill_dx_max=150.0) == False
+

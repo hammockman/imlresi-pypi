@@ -45,8 +45,10 @@ jh, June 2016
 """
 
 from struct import unpack
+from collections import namedtuple
 from loguru import logger
 import ujson as json  # faster; minifies by default
+import numpy as np
 
 
 def load_iml_json(fn):
@@ -588,7 +590,8 @@ class Trace():
             self.drill = []
             self.feed = []
             self.raw = None
-        _res = None  # placeholder for raw API results
+        self._res = None  # placeholder for raw API results
+
 
     def __str__(self):
         s = '*** HEADER ***\n'
@@ -867,6 +870,97 @@ class Trace():
         self._res = res  # keep a copy for accessor methods
 
         return res
+
+    def get_result(self, key):
+        if self._res is None:
+            logger.warning(f"Processing required before {key} is available")
+            return None
+        else:
+            return self._res[key]
+
+    def __getattr__(self, name):
+        # --- Support trace.get_ubdia() ---
+        if name.startswith("get_"):
+            key_name = name[4:]
+            
+            def getter():
+                if self._res is not None:
+                    for actual_key in self._res.keys():
+                        if actual_key.lower() == key_name.lower():
+                            return self.get_result(actual_key)
+                return self.get_result(key_name.upper())
+                
+            return getter
+
+        # --- Support trace.ubdia ---
+        if self._res is not None:
+            for actual_key in self._res.keys():
+                if actual_key.lower() == name.lower():
+                    return self.get_result(actual_key)
+        # Fallback to standard Python behavior
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+    @property
+    def x(self):
+        # FIXME resolution shouldn't be hardcoded
+        return np.arange(0, len(self.drill))/10.
+
+    def get_tracetype(self):
+        return self.get_result('TraceType')
+
+    def get_dob(self):
+        try:
+            return self.get_result('DOB')
+        except KeyError:
+            try:
+                return self.get_result('DBHOB')
+            except KeyError:
+                raise KeyError("Neither DOB or DBHOB are available")
+
+    def get_cambial_boundaries(self):
+        return namedtuple('CambialBoundaries', ['entry', 'exit'])(
+            self.get_result('BarkThickness'),
+            None if self.get_tracetype() == 'P-B' else self.get_result('BarkThickness') + self.get_result('UBDIA')
+        )
+
+    def get_pith(self):
+        return self.get_result('EntryRadius')
+
+    def get_bark_thickness(self):
+        return namedtuple('BarkThickness', ['entry', 'exit'])(
+            self.get_result('BarkThickness'),
+            None if self.get_tracetype() == 'P-B' else self.get_result('DOB') - self.get_result('UBDIA')
+        )
+
+    def get_wood_only(self):
+        # fit a line to the trace
+        xc = self.get_cambial_boundaries()
+        if xc.exit is None: # P-B
+            xp = self.get_pith()
+            ii = np.where(np.logical_and(self.x >= xc.entry, self.x <= xp))[0]
+        else:
+            ii = np.where(np.logical_and(self.x > xc.entry, self.x < xc.exit))[0]
+
+        return namedtuple('Wood', ['x', 'drill', 'feed'])(
+            self.x[ii],
+            self.drill[ii],
+            self.feed[ii],
+        )
+
+    def check_lopsidedness(self, ddrill_dx_max=0):
+        """
+        Do the entry and exit sides have appreciably different traces?
+        """
+        if self.get_tracetype() == 'P-B':
+            logger.warning("Lopsidedness check only applies to B-B traces")
+            return None
+
+        wood = self.get_wood_only()
+        slope, intcpt = np.polyfit(wood.x, wood.drill, 1)
+
+        return abs(slope) > ddrill_dx_max
+
+
 
 
 if __name__ == "__main__":

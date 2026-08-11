@@ -15,21 +15,6 @@ import jsondiff as jd
 from imlresi import trace
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # test format identification
 def test_identify_format():
     assert trace.identify_format('tests/data/1-131-withfeed-json.rgp') == 'json'
@@ -334,7 +319,8 @@ def test_new_trace_accessors():
     }
     wood = tr.get_wood_only()
     # ii indices: self.x >= 0.1 and self.x <= 0.3 -> indices 1, 2, 3 (self.x = [0.0, 0.1, 0.2, 0.3, 0.4])
-    assert np.array_equal(wood.x, np.array([0.1, 0.2, 0.3]))
+    # self.get_pith() = 0.3 -> wood.r = [-0.2, -0.1, 0.0]
+    assert np.allclose(wood.r, np.array([-0.2, -0.1, 0.0]))
     assert np.array_equal(wood.drill, np.array([20.0, 30.0, 40.0]))
     assert np.array_equal(wood.feed, np.array([2.0, 3.0, 4.0]))
 
@@ -343,26 +329,121 @@ def test_new_trace_accessors():
         'TraceType': 'B-B',
         'BarkThickness': 0.1,
         'UBDIA': 0.2,
+        'EntryRadius': 0.2,
     }
     wood_bb = tr.get_wood_only()
     # ii indices: self.x > 0.1 and self.x < 0.3 (actually 0.30000000000000004 due to float addition) -> index 2, 3
-    assert np.array_equal(wood_bb.x, np.array([0.2, 0.3]))
+    # self.get_pith() = 0.2 -> wood_bb.r = [0.0, 0.1]
+    assert np.allclose(wood_bb.r, np.array([0.0, 0.1]))
     assert np.array_equal(wood_bb.drill, np.array([30.0, 40.0]))
     assert np.array_equal(wood_bb.feed, np.array([3.0, 4.0]))
 
     # Verify check_lopsidedness warning on P-B
     tr._res['TraceType'] = 'P-B'
-    assert tr.check_lopsidedness() is None
+    assert tr.check_lopsidedness() == pytest.approx(100.0)
 
     # Case B-B for check_lopsidedness
     tr._res = {
         'TraceType': 'B-B',
         'BarkThickness': 0.0,
         'UBDIA': 0.4,
+        'EntryRadius': 0.2,
     }
     # wood_bb will contain elements 1, 2, 3 (indices > 0 and < 0.4)
-    # wood_bb.x = [0.1, 0.2, 0.3]
-    # wood_bb.drill = [20.0, 30.0, 40.0] -> slope = 100.0
+    # wood_bb.r = [-0.1, 0.0, 0.1]
+    # wood_bb.drill = [20.0, 30.0, 40.0] -> slope = 100.0, intcpt = 30.0
+    slope = tr.check_lopsidedness()
+    assert slope == pytest.approx(100.0)
     assert tr.check_lopsidedness(ddrill_dx_max=50.0) == True
     assert tr.check_lopsidedness(ddrill_dx_max=150.0) == False
+
+
+def test_process_using_resiapi_empty_trace():
+    from imlresi.trace import ResiAPIError
+    tr = trace.Trace()
+    tr.drill = []
+    tr.feed = []
+    tr.trace_filename = "empty_trace.pdc"
+    with pytest.raises(ResiAPIError) as excinfo:
+        tr.process_using_resiapi("http://localhost:8080")
+    assert "contains no drill data points" in str(excinfo.value)
+
+
+def test_get_wood_only():
+    """Test get_wood_only method for P-B and B-B trace types."""
+    import numpy as np
+
+    tr = trace.Trace()
+    tr.drill = np.array([10.0, 15.0, 25.0, 35.0, 45.0, 55.0])
+    tr.feed = np.array([1.0, 1.5, 2.5, 3.5, 4.5, 5.5])
+
+    # Test P-B trace: entry = 0.1, pith = 0.4
+    # self.x is arange(len(drill)) * 0.1 -> [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    tr._res = {
+        'TraceType': 'P-B',
+        'BarkThickness': 0.1,
+        'EntryRadius': 0.4,
+    }
+    wood_pb = tr.get_wood_only()
+
+    # NamedTuple attribute checks
+    assert hasattr(wood_pb, 'r')
+    assert hasattr(wood_pb, 'drill')
+    assert hasattr(wood_pb, 'feed')
+
+    # For P-B: self.x >= 0.1 and self.x <= 0.4 -> indices 1, 2, 3, 4 ([0.1, 0.2, 0.3, 0.4] - 0.4 = [-0.3, -0.2, -0.1, 0.0])
+    assert np.allclose(wood_pb.r, np.array([-0.3, -0.2, -0.1, 0.0]))
+    assert np.array_equal(wood_pb.drill, np.array([15.0, 25.0, 35.0, 45.0]))
+    assert np.array_equal(wood_pb.feed, np.array([1.5, 2.5, 3.5, 4.5]))
+
+    # Test B-B trace: entry = 0.1, exit = 0.4 (BarkThickness=0.1, UBDIA=0.3 -> exit = 0.1 + 0.3 = 0.4)
+    # pith = 0.25
+    tr._res = {
+        'TraceType': 'B-B',
+        'BarkThickness': 0.1,
+        'UBDIA': 0.3,
+        'EntryRadius': 0.25,
+    }
+    wood_bb = tr.get_wood_only()
+
+    # For B-B: self.x > 0.1 and self.x < 0.4 -> indices 2, 3 ([0.2, 0.3] - 0.25 = [-0.05, 0.05])
+    assert np.allclose(wood_bb.r, np.array([-0.05, 0.05]))
+    assert np.array_equal(wood_bb.drill, np.array([25.0, 35.0]))
+    assert np.array_equal(wood_bb.feed, np.array([2.5, 3.5]))
+
+    # Test when tr.drill and tr.feed are Python lists (as when loaded from .rgp / API)
+    tr.drill = [10.0, 15.0, 25.0, 35.0, 45.0, 55.0]
+    tr.feed = [1.0, 1.5, 2.5, 3.5, 4.5, 5.5]
+    wood_list = tr.get_wood_only()
+    assert np.array_equal(wood_list.drill, np.array([25.0, 35.0]))
+    assert np.array_equal(wood_list.feed, np.array([2.5, 3.5]))
+
+
+def test_read_empty_trace(monkeypatch, tmp_path):
+    """Test reading empty trace raises ValueError unless read_empty=True."""
+    dummy_file = tmp_path / "empty_trace.json"
+    import json
+    import numpy as np
+    dummy_file.write_text(json.dumps({"header": {"dateTime": "2026-01-01"}}))
+
+    def mock_read(fn):
+        return {
+            'raw': {},
+            'header': {},
+            'settings': {},
+            'drill': np.array([]),
+            'feed': np.array([]),
+        }
+
+    monkeypatch.setattr(trace, 'read_json', mock_read)
+    tr = trace.Trace()
+
+    # Should raise ValueError by default (read_empty=False)
+    with pytest.raises(ValueError, match="No drill data"):
+        tr.read(str(dummy_file))
+
+    # Should succeed when read_empty=True
+    tr.read(str(dummy_file), read_empty=True)
+    assert len(tr.drill) == 0
+
 

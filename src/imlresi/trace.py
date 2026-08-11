@@ -46,9 +46,18 @@ jh, June 2016
 
 from struct import unpack
 from collections import namedtuple
+from pathlib import Path
 from loguru import logger
 import ujson as json  # faster; minifies by default
 import numpy as np
+
+
+class ResiAPIError(Exception):
+    """Custom exception raised when the Resi API request fails."""
+    def __init__(self, message, status_code=None, response_text=None):
+        super().__init__(message)
+        self.status_code = status_code
+        self.response_text = response_text
 
 
 def load_iml_json(fn):
@@ -591,6 +600,7 @@ class Trace():
             self.feed = []
             self.raw = None
         self._res = None  # placeholder for raw API results
+        self.trace_filename = None
 
 
     def __str__(self):
@@ -621,7 +631,7 @@ class Trace():
     def __repr__(self):
         return "%s(%r)" % (self.__class__, self.__dict__)
 
-    def read(self, trace_filename):
+    def read(self, trace_filename, read_empty=False):
         """Read a trace from file.
 
         File Formats:
@@ -632,6 +642,11 @@ class Trace():
         - "pdc" - format used by IML iPad app
         - "txt1" - txt format exported by PD-Tools v 1.22
         - "txt2" - txt format exported by PD-Tools v 1.67
+
+        Args:
+            trace_filename (str or Path): Path to the trace file.
+            read_empty (bool, optional): If False (default), raises a ValueError
+                when the trace contains no drill data. If True, permits reading empty traces.
         """
         self.trace_filename = trace_filename
         self.trace_format = identify_format(self.trace_filename)
@@ -648,6 +663,19 @@ class Trace():
         self.settings = res['settings']
         self.drill = res['drill']
         self.feed = res['feed']
+
+        # check that trace contains drill data
+        if self.drill is None or len(self.drill) == 0:
+            if not read_empty:
+                logger.error(f'{trace_filename}: No drill data.')
+                raise ValueError(f'{trace_filename}: No drill data.')
+            else:
+                logger.warning(f'{trace_filename}: No drill data.')
+
+        # check that trace is not (nearly) all zeros
+        if self.drill is not None and len(self.drill) > 0 and np.mean(self.drill) < 1:
+            logger.warning(f'{trace_filename}. Near zero drill force.')
+            #raise ValueError('Near zero drill force')
 
     def hash(self):
         # use md5 (rather than sha256 for example) only because it creates
@@ -807,10 +835,13 @@ class Trace():
 
         return axs
 
-    def process_using_resiapi(self, api_uri, ctrlset=None, annotation=None):
+    def process_using_resiapi(self, api_uri, ctrlset=None, annotation=None, timeout=30.0, verify=None):
 
         import certifi
         import requests
+
+        if verify is None:
+            verify = certifi.where()
 
         def push_through_api(inp, uri):
             """
@@ -818,24 +849,46 @@ class Trace():
 
             Returns a dict holding the processed data
             """
-            res = requests.post(
-                uri,
-                json=inp, # inp should be a dict()
-                #verify=False,
-                #verify="/etc/letsencrypt/live/lin1.aliente.ch/fullchain.pem",
-                verify=certifi.where(),
-            )
-            # requests is supposed to use certifi by default, but for some reason
-            # it doesn't unless verify=certifi.where() is supplied!!!
-            if res.status_code != 200:
-                print(res.status_code, type(res.status_code), res.status_code==500, res.text)
-                if res.status_code in (401, 403, 500, 503):
-                    # either the API server is down or auth issues
-                    raise ValueError(f'API failure {res.status_code}: contact jh@aliente.ch')
-                else:
-                    raise ValueError(f'POST {uri} returns {res.status_code}')
+            try:
+                res = requests.post(
+                    uri,
+                    json=inp,
+                    verify=verify,
+                    timeout=timeout,
+                )
+            except requests.exceptions.Timeout as err:
+                raise ResiAPIError(f"API request to {uri} timed out after {timeout}s.") from err
+            except requests.exceptions.ConnectionError as err:
+                raise ResiAPIError(f"Failed to connect to API server at {uri}. Server may be down.") from err
+            except requests.exceptions.RequestException as err:
+                raise ResiAPIError(f"Network error calling API {uri}: {err}") from err
 
-            return res.json()
+            if res.status_code != 200:
+                try:
+                    err_detail = res.json().get("detail", res.text[:300])
+                except Exception:
+                    err_detail = res.text[:300] if res.text else "No response body"
+
+                logger.error(f"API returned HTTP {res.status_code}: {err_detail}")
+                
+                if res.status_code in (401, 403):
+                    raise ResiAPIError(f"API Authentication/Permission Error ({res.status_code}): {err_detail}", status_code=res.status_code, response_text=res.text)
+                elif res.status_code >= 500:
+                    raise ResiAPIError(f"API Server Error ({res.status_code}): Contact jh@aliente.ch. Detail: {err_detail}", status_code=res.status_code, response_text=res.text)
+                else:
+                    raise ResiAPIError(f"API Request Failed ({res.status_code}): {err_detail}", status_code=res.status_code, response_text=res.text)
+
+            try:
+                return res.json()
+            except ValueError as err:
+                raise ResiAPIError("API returned HTTP 200 but response body was not valid JSON.") from err
+
+        # validate that trace contains profile data before sending to API
+        fname = Path(self.trace_filename).name if self.trace_filename else "unnamed trace"
+        if self.drill is None or len(self.drill) == 0:
+            raise ResiAPIError(f"Cannot process trace '{fname}' via API: trace contains no drill data points (0 length profile).")
+        if self.feed is None or len(self.feed) == 0:
+            raise ResiAPIError(f"Cannot process trace '{fname}' via API: trace contains no feed data points (0 length profile).")
 
         # augment trace with control parameters
         if ctrlset is None:
@@ -847,7 +900,7 @@ class Trace():
                 "BaselineMethod": "Linear",
                 "TreeClass": "Density",
             }
-        inp = ctrlset | {'rgp': self.to_dict()}
+        inp = ctrlset | {'rgp': self.to_dict(), 'trace_filename': self.trace_filename}
 
         # check that trace_format is specified
         if "trace_format" not in inp:
@@ -858,18 +911,10 @@ class Trace():
             inp = inp | {'feature.locations': annotation}
 
         # push trace through Resi API
-        try:
-            res = push_through_api(inp, api_uri)
-        except ValueError as err:
-            logger.error(f'API call failed {self.trace_filename}. {type(err)}: {err}')
-            raise ValueError('API ValueError')
-        except Exception as err:
-            logger.error(f'API call failed {self.trace_filename}. {type(err)}: {err}')
-            raise ValueError('API Exception')
+        self._res = push_through_api(inp, api_uri)  # keep the response
+        self._inp = inp  # keep this for things that need it
 
-        self._res = res  # keep a copy for accessor methods
-
-        return res
+        return self._res  # return the response directly
 
     def get_result(self, key):
         if self._res is None:
@@ -882,14 +927,14 @@ class Trace():
         # --- Support trace.get_ubdia() ---
         if name.startswith("get_"):
             key_name = name[4:]
-            
+
             def getter():
                 if self._res is not None:
                     for actual_key in self._res.keys():
                         if actual_key.lower() == key_name.lower():
                             return self.get_result(actual_key)
                 return self.get_result(key_name.upper())
-                
+
             return getter
 
         # --- Support trace.ubdia ---
@@ -941,26 +986,33 @@ class Trace():
         else:
             ii = np.where(np.logical_and(self.x > xc.entry, self.x < xc.exit))[0]
 
-        return namedtuple('Wood', ['x', 'drill', 'feed'])(
-            self.x[ii],
-            self.drill[ii],
-            self.feed[ii],
+        drill = np.asarray(self.drill)
+        feed = np.asarray(self.feed) if self.feed is not None else np.array([])
+
+        return namedtuple('Wood', ['r', 'drill', 'feed'])(
+            self.x[ii] - self.get_pith(), 
+            drill[ii],
+            feed[ii],
         )
 
-    def check_lopsidedness(self, ddrill_dx_max=0):
+    def check_lopsidedness(self, ddrill_dx_max=None):
         """
         Do the entry and exit sides have appreciably different traces?
+
+        TODO: the baseline is unaccounted for. When testing we probably need to compare
+        against different +ve and -ve thresholds
         """
         if self.get_tracetype() == 'P-B':
-            logger.warning("Lopsidedness check only applies to B-B traces")
-            return None
+            logger.warning("Lopsidedness check only makes sense for B-B traces")
 
         wood = self.get_wood_only()
-        slope, intcpt = np.polyfit(wood.x, wood.drill, 1)
 
-        return abs(slope) > ddrill_dx_max
+        slope, _ = np.polyfit(wood.r, wood.drill, 1)
 
-
+        if ddrill_dx_max is None:
+            return slope
+        else:
+            return abs(slope) > ddrill_dx_max
 
 
 if __name__ == "__main__":

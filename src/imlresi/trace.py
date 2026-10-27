@@ -67,8 +67,10 @@ def load_iml_json(fn):
     from binary to json formats it embeds TAB (\x09) characters in
     the "remark field. This breaks JSON parsers.
     """
-    s = open(fn, 'r').read()
+    with open(fn, 'r') as f:
+        s = f.read()
     s = s.replace("\t", "\\t")
+    
     return json.loads(s), s
 
 
@@ -887,8 +889,8 @@ class Trace():
         fname = Path(self.trace_filename).name if self.trace_filename else "unnamed trace"
         if self.drill is None or len(self.drill) == 0:
             raise ResiAPIError(f"Cannot process trace '{fname}' via API: trace contains no drill data points (0 length profile).")
-        if self.feed is None or len(self.feed) == 0:
-            raise ResiAPIError(f"Cannot process trace '{fname}' via API: trace contains no feed data points (0 length profile).")
+        if self.feed is not None and len(self.feed) > 0 and len(self.feed) != len(self.drill):
+            raise ResiAPIError(f"Cannot process trace '{fname}' via API: feed data length ({len(self.feed)}) does not match drill data length ({len(self.drill)}).")
 
         # augment trace with control parameters
         if ctrlset is None:

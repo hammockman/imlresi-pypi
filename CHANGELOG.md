@@ -20,6 +20,12 @@
   app or the API are written now; recompute them with
   `recompute_den_trace()`. Density stored as text by the app is written
   back as numbers.
+- Paths: relative `Files/...` and `Tables/...` paths were always taken to
+  mean the Fabric lakehouse (`/lakehouse/default/...`), even outside Fabric;
+  now only when the mount exists and no such local path does. `abfss://`
+  URIs that aren't OneLake were silently rewritten to a wrong lakehouse path;
+  they now raise `ValueError`. `to_dotresi` resolves paths the same way as
+  reading does, so `Files/x.Resi` names the same file in both.
 
 ## 0.0.46 (2026-10-30)
 

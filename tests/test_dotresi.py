@@ -409,9 +409,54 @@ def test_normalize_filepath():
     assert normalize_filepath("abfss://workspace@onelake.dfs.fabric.microsoft.com/lakehouse/Files/test.Resi") == Path("/lakehouse/default/Files/test.Resi")
     assert normalize_filepath("abfss://workspace@onelake.dfs.fabric.microsoft.com/lakehouse/Files/sub/test.Resi") == Path("/lakehouse/default/Files/sub/test.Resi")
     assert normalize_filepath("abfss:/Files/test.Resi") == Path("/lakehouse/default/Files/test.Resi")
-    assert normalize_filepath("Files/test.Resi") == Path("/lakehouse/default/Files/test.Resi")
-    assert normalize_filepath("Tables/my_table") == Path("/lakehouse/default/Tables/my_table")
     assert normalize_filepath("/tmp/test.Resi") == Path("/tmp/test.Resi")
+    assert normalize_filepath("data/Files/test.Resi") == Path("data/Files/test.Resi")
+
+
+def test_normalize_filepath_other_abfss():
+    # an ADLS storage account isn't the lakehouse mount
+    from imlresi.dotresi import normalize_filepath
+    with pytest.raises(ValueError, match="OneLake"):
+        normalize_filepath("abfss://container@account.dfs.core.windows.net/dir/test.Resi")
+
+
+def test_normalize_relative_lakehouse_paths(tmp_path, monkeypatch):
+    from pathlib import Path
+    import imlresi.dotresi as d
+    mount = tmp_path / 'mount'
+    work = tmp_path / 'work'
+    work.mkdir()
+    monkeypatch.chdir(work)
+    monkeypatch.setattr(d, 'LAKEHOUSE_MOUNT', mount)
+
+    # outside Fabric (no mount) relative paths stay relative
+    assert d.normalize_filepath("Files/test.Resi") == Path("Files/test.Resi")
+    # inside Fabric they name the lakehouse
+    mount.mkdir()
+    assert d.normalize_filepath("Files/test.Resi") == mount / "Files/test.Resi"
+    assert d.normalize_filepath("Tables/my_table") == mount / "Tables/my_table"
+    # unless that local path exists
+    (work / "Files").mkdir()
+    (work / "Files" / "test.Resi").touch()
+    assert d.normalize_filepath("Files/test.Resi") == Path("Files/test.Resi")
+
+
+def test_read_and_write_use_the_same_place(tmp_path, monkeypatch):
+    import shutil
+    import imlresi.dotresi as d
+    mount = tmp_path / 'mount'
+    (mount / 'Files').mkdir(parents=True)
+    work = tmp_path / 'work'
+    work.mkdir()
+    monkeypatch.chdir(work)
+    monkeypatch.setattr(d, 'LAKEHOUSE_MOUNT', mount)
+    src = Path(__file__).parent / 'data' / 'corpus' / 'resi' / 'C03' / 'C03.Resi'
+    shutil.copy(src, mount / 'Files' / 'x.Resi')
+
+    rs = d.ResiResultSet('Files/x.Resi')
+    rs.to_dotresi('Files/y.Resi')
+    assert (mount / 'Files' / 'y.Resi').exists()
+    assert not (work / 'Files').exists()
 
 
 def test_change_instrument_id():

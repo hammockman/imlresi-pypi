@@ -783,57 +783,47 @@ class ResiResult:
         return np.cumsum(aw_entry) / np.arange(1, len(aw_entry) + 1)
 
 
+# where Fabric mounts the notebook's default lakehouse
+LAKEHOUSE_MOUNT = Path("/lakehouse/default")
+
+
 def normalize_filepath(filepath):
     """
-    Normalizes file paths across URI schemes (file:, abfss:), /lakehouse/default mount points,
-    and relative Fabric Lakehouse paths.
+    Turns the ways Fabric notebooks name a lakehouse file into a local path.
+
+    - ``file:`` / ``file://`` URIs become plain paths.
+    - OneLake URIs (``abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>/Files/...``)
+      become paths under the default lakehouse mount, ``/lakehouse/default/Files/...``.
+      This assumes the URI names the notebook's default lakehouse.
+    - Relative ``Files/...`` and ``Tables/...`` paths are taken as lakehouse
+      paths only inside Fabric (the mount exists) and when no such local
+      path exists.
+
+    Other ``abfss://`` URIs (ADLS storage accounts) can't be read as local
+    files and raise ValueError. Everything else is returned unchanged.
     """
     if filepath is None:
         return None
 
     path_str = str(filepath)
 
-    # Handle file: / file:// URIs
     if path_str.startswith("file://"):
         path_str = path_str[7:]
     elif path_str.startswith("file:"):
         path_str = path_str[5:]
 
-    # Handle abfss: / abfss:// URIs
-    if path_str.startswith("abfss://"):
-        parts = path_str.split("onelake.dfs.fabric.microsoft.com/")
-        if len(parts) > 1:
-            sub_parts = parts[1].split("/", 1)
-            if len(sub_parts) > 1:
-                path_str = f"/lakehouse/default/{sub_parts[1]}"
-            else:
-                path_str = f"/lakehouse/default/{parts[1]}"
-        else:
-            import re
-            match = re.search(r"abfss://[^/]+/[^/]+/(.*)", path_str)
-            if match:
-                path_str = f"/lakehouse/default/{match.group(1)}"
-            else:
-                clean_path = path_str[8:].lstrip('/')
-                if not clean_path.startswith("lakehouse/"):
-                    path_str = f"/lakehouse/default/{clean_path}"
-                else:
-                    path_str = f"/{clean_path}"
-    elif path_str.startswith("abfss:"):
-        clean_path = path_str[6:].lstrip('/')
-        if not clean_path.startswith("lakehouse/"):
-            path_str = f"/lakehouse/default/{clean_path}"
-        else:
-            path_str = f"/{clean_path}"
+    if path_str.startswith("abfss:"):
+        m = re.match(r"abfss://[^/@]+@onelake\.dfs\.fabric\.microsoft\.com/[^/]+/(.+)", path_str)
+        if m:
+            return LAKEHOUSE_MOUNT / m.group(1)
+        m = re.match(r"abfss:/*((?:Files|Tables)/.*)", path_str)
+        if m:
+            return LAKEHOUSE_MOUNT / m.group(1)
+        raise ValueError(f"Only OneLake abfss:// URIs can be read as local files: {path_str}")
 
-    # Handle Fabric relative Lakehouse paths like Files/... or Tables/...
-    if (
-        path_str.startswith("Files/")
-        or path_str.startswith("Tables/")
-        or path_str.startswith("files/")
-        or path_str.startswith("tables/")
-    ):
-        path_str = f"/lakehouse/default/{path_str}"
+    if (path_str.startswith(("Files/", "Tables/"))
+            and LAKEHOUSE_MOUNT.is_dir() and not Path(path_str).exists()):
+        return LAKEHOUSE_MOUNT / path_str
 
     return Path(path_str)
 
@@ -1785,7 +1775,7 @@ class ResiResultSet:
             Converting drops columns the target layout doesn't have, with a
             warning if they hold values.
         """
-        filepath = Path(filepath)
+        filepath = normalize_filepath(filepath)
         if filepath.parent:
             filepath.parent.mkdir(parents=True, exist_ok=True)
 

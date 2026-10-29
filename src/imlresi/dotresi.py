@@ -1590,11 +1590,13 @@ class ResiResultSet:
         """
         Sets the instrument ID (ResiCode and toolserial) across all results in this result set.
         """
+        new_id = str(new_instrument_id)
         for r in self.results:
-            r.descriptors['ResiCode'] = str(new_instrument_id)
-            if hasattr(r, 'trace') and r.trace is not None:
-                if hasattr(r.trace, 'header') and isinstance(r.trace.header, dict):
-                    r.trace.header['toolserial'] = str(new_instrument_id)
+            r.descriptors['ResiCode'] = new_id
+            for rows in (r.ring_data, r.board_moe):
+                for row in rows:
+                    if 'ResiCode' in row:
+                        row['ResiCode'] = new_id
 
     def to_dotresi(self, filepath, overwrite=False, resi_code=None, format_version="4.8.0"):
         """
@@ -1730,11 +1732,7 @@ class ResiResultSet:
 
             # Reconstruct ring_data with key alias normalization
             for ring in r.ring_data:
-                ring_row = {
-                    'FileName': fname,
-                    'TreeID': r.get_descriptor('TreeID', ''),
-                    'ResiCode': r.get_descriptor('ResiCode', 'PD400-0000'),
-                }
+                ring_row = {}
                 for k, v in ring.items():
                     if k == 'RingMeanDen' and 'RingDensityMean' not in ring:
                         ring_row['RingDensityMean'] = clean_float(v)
@@ -1742,6 +1740,13 @@ class ResiResultSet:
                         ring_row['RingMOEMean'] = clean_float(v)
                     else:
                         ring_row[k] = clean_float(v) if k not in ('Radius', 'FileName', 'TreeID', 'ResiCode') else v
+                # the trace's identity comes from its df row, so a renamed
+                # trace or changed instrument ID reaches ringData too
+                ring_row.update({
+                    'FileName': fname,
+                    'TreeID': r.get_descriptor('TreeID', ''),
+                    'ResiCode': resi_code or r.get_descriptor('ResiCode') or 'PD400-0000',
+                })
                 ring_row_full = {col: None for col in RINGDATA_COLUMNS}
                 ring_row_full.update(ring_row)
                 ring_rows.append(ring_row_full)
@@ -2057,6 +2062,9 @@ def save_traces_to_dotresi(traces, filepath, append=True, resi_code=None, format
     """
     Saves or appends imlresi Trace objects to a .Resi file.
     Includes API computed results from trace._res if available.
+
+    With append=True, traces are added to an existing file; a trace whose
+    file name is already present replaces that entry (with a warning).
     """
     if not isinstance(traces, (list, tuple, set)):
         traces = [traces]
@@ -2083,11 +2091,10 @@ def save_traces_to_dotresi(traces, filepath, append=True, resi_code=None, format
         else:
             fname = f"trace_{len(rs.results) + 1}.rgp"
 
+        # FQResi takes TreeID from the trace's idNumber (Trace: header['description'])
         tree_id = ""
         if isinstance(trace.header, dict):
-            tree_id = trace.header.get('tree_id') or trace.header.get('remark') or ""
-        if not tree_id and hasattr(trace, 'tree_id'):
-            tree_id = trace.header.get('tree_id')
+            tree_id = trace.header.get('tree_id') or trace.header.get('description') or ""
 
         comment_val = ""
         if isinstance(trace.header, dict):
@@ -2235,6 +2242,12 @@ def save_traces_to_dotresi(traces, filepath, append=True, resi_code=None, format
             result.cum_den_trace = clean_array(api_res.get('cumDenTraces') or api_res.get('cumDenTrace'))
             result.corr_trace = clean_array(api_res.get('cTrace') or api_res.get('corrTraces') or api_res.get('corrTrace'))
 
+        # FileName identifies a trace throughout the file (resTraces etc. are
+        # keyed by it), so saving a trace again replaces its earlier entry
+        replaced = [r for r in rs.results if r.FileName == fname]
+        if replaced:
+            warnings.warn(f"Replacing existing entry for '{fname}' in {filepath.name}")
+            rs.results = [r for r in rs.results if r.FileName != fname]
         rs.results.append(result)
 
     rs.to_dotresi(filepath, overwrite=True, resi_code=resi_code, format_version=format_version)

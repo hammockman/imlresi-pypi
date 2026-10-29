@@ -183,7 +183,7 @@ def test_save_traces_to_resi():
         assert len(rs2) == 2
         assert rs2[1].FileName == "mock_trace_2.rgp"
         assert rs2[1].TreeID == "Tree-B"
-        assert rs2[1].ResiCode in ("PD500-test", "PD400-0000")
+        assert rs2[1].ResiCode == "PD500-test"
 
 def test_main_driver_cli():
     """

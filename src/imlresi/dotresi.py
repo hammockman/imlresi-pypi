@@ -1316,26 +1316,16 @@ class ResiResultSet:
 
             is_path = "/" in table_path_str or table_path_str.startswith("abfss://") or table_path_str.startswith(".")
 
+            # Decide existence explicitly: a lookup error must never be read as
+            # "no table", or the write below would replace the whole table
             pyspark_dt = None
-            table_exists = False
-
             if is_path:
-                try:
-                    pyspark_dt = PySparkDeltaTable.forPath(spark, table_path_str)
-                    table_exists = True
-                except Exception:
-                    try:
-                        tbl_name = table_path_str.split("/")[-1]
-                        pyspark_dt = PySparkDeltaTable.forName(spark, tbl_name)
-                        table_exists = True
-                    except Exception:
-                        table_exists = False
+                table_exists = PySparkDeltaTable.isDeltaTable(spark, table_path_str)
             else:
-                try:
-                    pyspark_dt = PySparkDeltaTable.forName(spark, table_path_str)
-                    table_exists = True
-                except Exception:
-                    table_exists = False
+                table_exists = spark.catalog.tableExists(table_path_str)
+            if table_exists:
+                pyspark_dt = (PySparkDeltaTable.forPath(spark, table_path_str) if is_path
+                              else PySparkDeltaTable.forName(spark, table_path_str))
 
             from pyspark.sql.types import NullType, StringType
 
@@ -1358,7 +1348,10 @@ class ResiResultSet:
                         )
 
             if mode == 'overwrite' or not table_exists:
-                writer = spark_df.write.format("delta").mode("overwrite").option(
+                # creating a new table must fail rather than replace whatever is there
+                writer = spark_df.write.format("delta").mode(
+                    "overwrite" if mode == 'overwrite' else "errorifexists"
+                ).option(
                     "mergeSchema", "true" if schema_mode == "merge" else "false"
                 )
                 if is_path:
@@ -1437,14 +1430,26 @@ class ResiResultSet:
         if schema is not None:
             arrow_tbl = arrow_tbl.cast(schema)
 
-        table_path = str(table_or_path) if not isinstance(table_or_path, DeltaTable) else table_or_path.table_uri
-        path_obj = Path(table_path)
+        if isinstance(table_or_path, DeltaTable):
+            table_path = table_or_path.table_uri
+            table_exists = True
+        else:
+            # ask delta-rs rather than the local filesystem, so that file://,
+            # abfss:// and s3:// tables are found too
+            from deltalake.exceptions import TableNotFoundError
+            table_path = str(table_or_path)
+            try:
+                DeltaTable(table_path, storage_options=storage_options)
+                table_exists = True
+            except TableNotFoundError:
+                table_exists = False
 
-        if mode == 'overwrite' or not path_obj.exists():
+        if mode == 'overwrite' or not table_exists:
             write_deltalake(
                 table_path,
                 arrow_tbl,
-                mode=mode if mode != 'merge' else 'overwrite',
+                # creating a new table must fail rather than replace whatever is there
+                mode='overwrite' if mode == 'overwrite' else 'error',
                 schema_mode=schema_mode,
                 storage_options=storage_options
             )

@@ -185,3 +185,34 @@ def test_no_feed_is_none_not_nan():
     """C01 stores feedTraces as NULL / list(NULL): there is no feed."""
     for r in load(CORPUS / 'resi' / 'C01' / 'C01.Resi'):
         assert r.feed is None
+
+
+@pytest.mark.parametrize('case', ['C01', 'C06'])
+def test_no_invented_density(tmp_path, case):
+    # without the app's own density traces, none are written
+    src = CORPUS / 'resi' / case / f'{case}.Resi'
+    assert read_raw(src).get('denTraces') is None
+    out = tmp_path / 'x.Resi'
+    load(src).to_dotresi(out)
+    assert read_raw(out)['denTraces'] is None
+    assert read_raw(out)['cumDenTraces'] is None
+
+
+def test_raw_traces_get_no_density(tmp_path):
+    from imlresi import Trace, save_traces_to_dotresi
+    t = Trace()
+    t.read(DATA / '2-178-withfeed.pdc')
+    out = tmp_path / 'n.Resi'
+    save_traces_to_dotresi([t], out)
+    assert read_raw(out)['denTraces'] is None
+
+
+def test_app_density_kept(tmp_path):
+    # C14's app stored denTraces as text; they are written back as numbers
+    src = CORPUS / 'resi' / 'C14' / 'C14.Resi'
+    out = tmp_path / 'x.Resi'
+    load(src).to_dotresi(out)
+    a, b = read_raw(src)['denTraces'], read_raw(out)['denTraces']
+    assert list(a) == list(b)
+    for k in a:
+        np.testing.assert_array_equal(np.ravel(a[k]).astype(float), np.ravel(b[k]))

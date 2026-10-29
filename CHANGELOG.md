@@ -12,6 +12,14 @@
   library now follows the app version, and matches app 5.0.0 densities
   exactly (it was ~1.2% off). Eglobulus used the wrong sigmoid offset
   (6 instead of 7.5).
+- `to_dotresi` and `save_traces_to_dotresi` filled in missing `denTraces`
+  and `cumDenTraces` with the library's own recomputation, which then read
+  back as the app's. For raw traces saved without API results, the inputs
+  were placeholders (diameter = trace length, no baseline correction,
+  slope 1), so those densities were meaningless. Only densities from the
+  app or the API are written now; recompute them with
+  `recompute_den_trace()`. Density stored as text by the app is written
+  back as numbers.
 
 ## 0.0.46 (2026-10-30)
 

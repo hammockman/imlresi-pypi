@@ -1849,22 +1849,13 @@ class ResiResultSet:
             if r_pos_val is not None and len(r_pos_val) > 0:
                 r_pos[fname] = r_pos_val
 
-            # Computed density arrays (with fallback on-the-fly recomputation if missing)
+            # Density arrays only as the app or API produced them: readers take
+            # denTraces for the app's own, and the app never reads them back
             den_tr = getattr(r, 'den_trace', None)
-            if den_tr is None and hasattr(r, 'recompute_den_trace'):
-                try:
-                    den_tr = r.recompute_den_trace()
-                except Exception:
-                    den_tr = None
             if den_tr is not None and len(den_tr) > 0:
                 den_traces[fname] = den_tr
 
             cum_den_tr = getattr(r, 'cum_den_trace', None)
-            if cum_den_tr is None and hasattr(r, 'recompute_cum_den_trace'):
-                try:
-                    cum_den_tr = r.recompute_cum_den_trace()
-                except Exception:
-                    cum_den_tr = None
             if cum_den_tr is not None and len(cum_den_tr) > 0:
                 cum_den_traces[fname] = cum_den_tr
 

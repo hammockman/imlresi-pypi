@@ -1,0 +1,110 @@
+{
+ "feature_locations": null,
+ "annotations": [
+  {
+   "annotator": "annotator-1",
+   "annotation": {
+    "czf": 232.6,
+    "czs": 11.2,
+    "kps": [
+     [
+      112,
+      112,
+      "bark"
+     ],
+     [
+      1195,
+      1309,
+      "pith"
+     ],
+     [
+      2326,
+      2326,
+      "bark"
+     ]
+    ],
+    "nkps": 3,
+    "pPos": 125.2,
+    "rPos": [],
+    "scan": null,
+    "DBHOB": 243.8,
+    "notes": null,
+    "traceid": null,
+    "ugliness": "ok",
+    "TraceType": "B-B",
+    "trace_type": "completely-through",
+    "truly_radial": "close-to-pith"
+   }
+  },
+  {
+   "annotator": "annotator-1",
+   "annotation": {
+    "czf": 232.1,
+    "czs": 11.6,
+    "kps": [
+     [
+      116,
+      116,
+      "bark"
+     ],
+     [
+      1097,
+      1390,
+      "pith"
+     ],
+     [
+      2321,
+      2321,
+      "bark"
+     ]
+    ],
+    "nkps": 3,
+    "pPos": 124.35,
+    "rPos": [],
+    "scan": "SITE20.P01_T860",
+    "DBHOB": 243.7,
+    "notes": null,
+    "traceid": null,
+    "ugliness": "weird",
+    "TraceType": "B-B",
+    "trace_type": "completely-through",
+    "truly_radial": "passes-through-pith"
+   }
+  },
+  {
+   "annotator": "annotator-1",
+   "annotation": {
+    "czf": 232.5,
+    "czs": 11.5,
+    "kps": [
+     [
+      115,
+      115,
+      "bark"
+     ],
+     [
+      1253,
+      1261,
+      "pith"
+     ],
+     [
+      2325,
+      2325,
+      "bark"
+     ]
+    ],
+    "nkps": 3,
+    "pPos": 125.7,
+    "rPos": [],
+    "scan": "SITE20.P01_T860",
+    "DBHOB": 244.0,
+    "notes": null,
+    "traceid": null,
+    "ugliness": "ok",
+    "TraceType": "B-B",
+    "trace_type": "completely-through",
+    "truly_radial": "passes-through-pith"
+   }
+  }
+ ]
+}

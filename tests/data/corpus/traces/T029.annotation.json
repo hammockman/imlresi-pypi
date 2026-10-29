@@ -1,0 +1,18 @@
+{
+ "feature_locations": null,
+ "annotations": [
+  {
+   "annotator": null,
+   "annotation": {
+    "czf": {},
+    "czs": 16.0,
+    "pPos": 43.5,
+    "rPos": [
+     311.0
+    ],
+    "DBHOB": 87.0,
+    "TraceType": "P-B"
+   }
+  }
+ ]
+}

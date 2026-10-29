@@ -1,0 +1,40 @@
+{
+ "feature_locations": null,
+ "annotations": [
+  {
+   "annotator": "annotator-1",
+   "annotation": {
+    "czf": 265.6,
+    "czs": 16.2,
+    "kps": [
+     [
+      162,
+      162,
+      "bark"
+     ],
+     [
+      1335,
+      1480,
+      "pith"
+     ],
+     [
+      2656,
+      2656,
+      "bark"
+     ]
+    ],
+    "nkps": 3,
+    "pPos": 140.75,
+    "rPos": [],
+    "scan": null,
+    "DBHOB": 281.8,
+    "notes": null,
+    "traceid": null,
+    "ugliness": "ok",
+    "TraceType": "B-B",
+    "trace_type": "completely-through",
+    "truly_radial": "close-to-pith"
+   }
+  }
+ ]
+}

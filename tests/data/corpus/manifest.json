@@ -1,0 +1,2601 @@
+{
+ "description": "Anonymised FQResi .Resi files and IML Resistograph traces for imlresi tests. Built by tools/build_corpus.py.",
+ "anonymisation": [
+  "file names, df$FileName and per-trace list names are C<nn>_<mm>.<ext> or T<nnn>.<ext>",
+  "TreeID/idNumber replaced by neutral ids with the original separators",
+  "comments/remarks, names, non-coordinate locations, memoryId, assessment texts and annotators replaced by placeholders",
+  "instrument serials (ResiCode/snrMachine/toolserial) mapped to PD400-9xxx/PD500-9xxx, snrElectronic to 9xxxx groups, consistently across .Resi files and traces",
+  "coordinates shifted by one random offset per case (off-shore); string formats kept",
+  "dates, settings, species, direction and all measured values unchanged"
+ ],
+ "cases": [
+  {
+   "id": "C01",
+   "kind": "resi",
+   "path": "resi/C01/C01.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "Version 3.0",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "FeedSpeed",
+    "RPM",
+    "SampleDate",
+    "Comment",
+    "TreeClass",
+    "TraceType",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "DiscArea",
+    "PrAWV",
+    "PrMOE",
+    "OWDensity",
+    "DensityProportion",
+    "CoreDensity",
+    "DiscDensity",
+    "Decay",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "RingCount",
+    "BLCorrDen",
+    "rSlope",
+    "rIntcpt",
+    "Species",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod"
+   ],
+   "n_df_columns": 32,
+   "top_level_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C01_01.rgp",
+    "C01_02.rgp",
+    "C01_03.rgp",
+    "C01_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD400-9001"
+   ],
+   "firmware": [
+    "1.78"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C01_01.rgp": true,
+    "C01_03.rgp": true,
+    "C01_04.rgp": true,
+    "C01_02.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,15 of 41; ids/text/serials/coords replaced",
+    "resTraces": "positional: kept 4 of 41",
+    "feedTraces": "positional: kept 4 of 41",
+    "ringData": "kept 40 of 417 rows by FileName",
+    "rPos": "positional: kept 4 of 41",
+    "version": "unchanged"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C02",
+   "kind": "resi",
+   "path": "resi/C02/C02.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "Version 4.0",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "TreeClass",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "DiscArea",
+    "PrAWV",
+    "PrMOE",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "DensityProportion",
+    "Decay",
+    "RingCount",
+    "BLCorrDen",
+    "rSlope",
+    "rIntcpt",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite"
+   ],
+   "n_df_columns": 38,
+   "top_level_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C02_01.rgp",
+    "C02_02.rgp",
+    "C02_03.rgp",
+    "C02_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "P-B",
+    "B-B"
+   ],
+   "instruments": [
+    "PD400-9001"
+   ],
+   "firmware": [
+    "1.77"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C02_01.rgp": true,
+    "C02_03.rgp": true,
+    "C02_04.rgp": true,
+    "C02_02.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,4 of 23; ids/text/serials/coords replaced",
+    "resTraces": "positional: kept 4 of 23",
+    "feedTraces": "positional: kept 4 of 23",
+    "ringData": "kept 77 of 466 rows by FileName",
+    "rPos": "positional: kept 4 of 23",
+    "version": "unchanged"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C03",
+   "kind": "resi",
+   "path": "resi/C03/C03.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "Version 4.2.4",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "TreeClass",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "DiscArea",
+    "PrAWV",
+    "PrMOE",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "RingCount",
+    "BLCorrDen",
+    "rSlope",
+    "rIntcpt",
+    "RPMCoef",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "RemoteSha"
+   ],
+   "n_df_columns": 39,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "rPos",
+    "version"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C03_01.rgp",
+    "C03_02.rgp",
+    "C03_03.rgp",
+    "C03_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "P-B",
+    "B-B"
+   ],
+   "instruments": [
+    "PD400-9001"
+   ],
+   "firmware": [
+    "1.77"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": true,
+   "cum_den_traces": true,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [
+    "Discrepancy: Recomputed density trace for 'C03_01.rgp' differs from stored trace in <file> (MAE=1.2574)",
+    "Discrepancy: Recomputed density trace for 'C03_02.rgp' differs from stored trace in <file> (MAE=1.2391)",
+    "Discrepancy: Recomputed density trace for 'C03_03.rgp' differs from stored trace in <file> (MAE=1.0295)",
+    "Discrepancy: Recomputed density trace for 'C03_04.rgp' differs from stored trace in <file> (MAE=1.1192)"
+   ],
+   "resi_drill_equals_trace_drill": {
+    "C03_01.rgp": true,
+    "C03_02.rgp": true,
+    "C03_03.rgp": true,
+    "C03_04.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,4 of 30; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "positional: kept 4 of 30",
+    "denTraces": "named: kept 4 of 30 by FileName",
+    "cumDenTraces": "named: kept 4 of 30 by FileName",
+    "Tppl.Mean.Density": "named: kept 4 of 30 by FileName",
+    "feedTraces": "positional: kept 4 of 30",
+    "ringData": "NULL, unchanged",
+    "rPos": "positional: kept 4 of 30",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C04",
+   "kind": "resi",
+   "path": "resi/C04/C04.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "Version 4.2.5",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TreeClass",
+    "TraceType",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "RPMCoef"
+   ],
+   "n_df_columns": 41,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C04_01.rgp",
+    "C04_02.rgp",
+    "C04_03.rgp",
+    "C04_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD400-9002"
+   ],
+   "firmware": [
+    "1.77"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C04_01.rgp": true,
+    "C04_02.rgp": true,
+    "C04_03.rgp": true,
+    "C04_04.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,4 of 54; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 4 of 54 by FileName",
+    "denTraces": "NULL, unchanged",
+    "cumDenTraces": "NULL, unchanged",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "feedTraces": "positional: kept 4 of 54",
+    "ringData": "kept 125 of 1121 rows by FileName",
+    "rPos": "positional: kept 4 of 54",
+    "version": "unchanged",
+    "boardMOE": "unchanged",
+    "regVar": "positional: kept rows 1,2,3,4 of 54"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C05",
+   "kind": "resi",
+   "path": "resi/C05/C05.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "Version 4.5.1",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "TreeClass",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "EqnType"
+   ],
+   "n_df_columns": 41,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "regVar"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C05_01.rgp",
+    "C05_02.rgp",
+    "C05_03.rgp",
+    "C05_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD400-9003"
+   ],
+   "firmware": [
+    "1.79"
+   ],
+   "resource": [
+    "Eucalypt"
+   ],
+   "has_feed": true,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C05_01.rgp": true,
+    "C05_03.rgp": true,
+    "C05_04.rgp": true,
+    "C05_02.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,5 of 150; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 4 of 150 by FileName",
+    "denTraces": "NULL, unchanged",
+    "cumDenTraces": "NULL, unchanged",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "feedTraces": "positional: kept 4 of 150",
+    "ringData": "kept 70 of 2710 rows by FileName",
+    "rPos": "positional: kept 4 of 150",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged",
+    "regVar": "constant table with 149 rows for 150 traces; kept 3 rows (same shortfall)"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "regVar: constant table with 149 rows for 150 traces; kept 3 rows (same shortfall)",
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C06",
+   "kind": "resi",
+   "path": "resi/C06/C06.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "R version 4.6.1 (2026-06-24)",
+   "df_version_column": "Version 5.6.0",
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "MOEmodel",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "Version",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "EqnType",
+    "RadialMOEMethod"
+   ],
+   "n_df_columns": 43,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "regVar"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C06_01.rgp",
+    "C06_02.rgp",
+    "C06_03.rgp",
+    "C06_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD500-9004"
+   ],
+   "firmware": [
+    "1.79"
+   ],
+   "resource": [
+    "HighDensityHardwood"
+   ],
+   "has_feed": true,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C06_01.rgp": true,
+    "C06_03.rgp": true,
+    "C06_04.rgp": true,
+    "C06_02.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,36 of 130; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 4 of 130 by FileName",
+    "denTraces": "NULL, unchanged",
+    "cumDenTraces": "NULL, unchanged",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "feedTraces": "positional: kept 4 of 130",
+    "ringData": "kept 70 of 2588 rows by FileName",
+    "rPos": "positional: kept 4 of 130",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged",
+    "regVar": "constant table with 129 rows for 130 traces; kept 3 rows (same shortfall)"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "regVar: constant table with 129 rows for 130 traces; kept 3 rows (same shortfall)",
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C07",
+   "kind": "resi",
+   "path": "resi/C07/C07.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "R version 4.3.3 (2024-02-29)",
+   "df_version_column": "Version 4.5.8",
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "MOEmodel",
+    "TraceType",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "Version",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "EqnType",
+    "RadialMOEMethod"
+   ],
+   "n_df_columns": 43,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "regVar"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C07_01.rgp",
+    "C07_02.rgp",
+    "C07_03.rgp",
+    "C07_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD500-9005"
+   ],
+   "firmware": [
+    "1.83"
+   ],
+   "resource": [
+    "Eucalypt"
+   ],
+   "has_feed": true,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C07_01.rgp": true,
+    "C07_03.rgp": true,
+    "C07_02.rgp": true,
+    "C07_04.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,4 of 29; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 4 of 29 by FileName",
+    "denTraces": "NULL, unchanged",
+    "cumDenTraces": "NULL, unchanged",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "feedTraces": "positional: kept 4 of 29",
+    "ringData": "kept 37 of 326 rows by FileName",
+    "rPos": "positional: kept 4 of 29",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged",
+    "regVar": "constant table with 28 rows for 29 traces; kept 3 rows (same shortfall)"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "regVar: constant table with 28 rows for 29 traces; kept 3 rows (same shortfall)",
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C08",
+   "kind": "resi",
+   "path": "resi/C08/C08.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "x86_64-pc-linux-gnu",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "TreeClass",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "DiscArea",
+    "PrAWV",
+    "PrMOE",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "RingCount",
+    "BLCorrDen",
+    "rSlope",
+    "rIntcpt",
+    "RPMCoef",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "RemoteSha"
+   ],
+   "n_df_columns": 39,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "feedTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "RSdf",
+    "resTraces",
+    "feedTraces",
+    "denTraces",
+    "cumDenTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C08_01.rgp",
+    "C08_02.rgp",
+    "C08_03.rgp",
+    "C08_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B"
+   ],
+   "instruments": [
+    "PD400-9006"
+   ],
+   "firmware": [
+    "1.83"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": true,
+   "cum_den_traces": true,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C08_01.rgp": true,
+    "C08_03.rgp": true,
+    "C08_04.rgp": true,
+    "C08_02.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,96 of 204; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "kept 4 of 204 rows by FileName",
+    "resTraces": "named: kept 4 of 204 by FileName",
+    "feedTraces": "named: kept 4 of 204 by FileName",
+    "denTraces": "named: kept 4 of 204 by FileName",
+    "cumDenTraces": "named: kept 4 of 204 by FileName",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "ringData": "kept 19 of 1608 rows by FileName",
+    "rPos": "named: kept 3 of 97 by FileName",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged",
+    "regVar": "NULL, unchanged"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "rPos: named: kept 3 of 97 by FileName",
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C09",
+   "kind": "resi",
+   "path": "resi/C09/C09.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": null,
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "FeedSpeed",
+    "RPM",
+    "SampleDate",
+    "Comment",
+    "TraceType",
+    "TreeClass",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "DiscArea",
+    "PrAWV",
+    "PrMOE",
+    "OWDensity",
+    "DensityProportion",
+    "CoreDensity",
+    "DiscDensity",
+    "Decay",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "BLCorrDen",
+    "rSlope",
+    "rIntcpt"
+   ],
+   "n_df_columns": 27,
+   "top_level_elements": [
+    "df",
+    "corrTraces",
+    "resTraces",
+    "ringData",
+    "rPos"
+   ],
+   "nonempty_elements": [
+    "df",
+    "corrTraces",
+    "resTraces",
+    "ringData",
+    "rPos"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C09_01.rgp",
+    "C09_02.rgp",
+    "C09_03.rgp",
+    "C09_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD400-9007"
+   ],
+   "firmware": [
+    "1.76"
+   ],
+   "resource": [],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [
+    "Discrepancy: Recomputed corrected trace for 'C09_01.rgp' differs from stored trace in <file> (MAE=3389.8957)",
+    "Discrepancy: Recomputed corrected trace for 'C09_02.rgp' differs from stored trace in <file> (MAE=1888.0380)",
+    "Discrepancy: Recomputed corrected trace for 'C09_03.rgp' differs from stored trace in <file> (MAE=2415.1485)",
+    "Discrepancy: Recomputed corrected trace for 'C09_04.rgp' differs from stored trace in <file> (MAE=1831.6574)"
+   ],
+   "resi_drill_equals_trace_drill": {
+    "C09_01.rgp": false,
+    "C09_03.rgp": false,
+    "C09_02.rgp": false,
+    "C09_04.rgp": false
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,4 of 100; ids/text/serials/coords replaced",
+    "corrTraces": "positional: kept 4 of 100",
+    "resTraces": "positional: kept 4 of 100",
+    "ringData": "kept 94 of 2484 rows by FileName",
+    "rPos": "positional: kept 4 of 100"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C10",
+   "kind": "resi",
+   "path": "resi/C10/C10.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "version 2.0.00",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "FeedSpeed",
+    "RPM",
+    "SampleDate",
+    "Comment",
+    "TraceType",
+    "TreeClass",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "DiscArea",
+    "PrAWV",
+    "PrMOE",
+    "OWDensity",
+    "DensityProportion",
+    "CoreDensity",
+    "DiscDensity",
+    "Decay",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "BLCorrDen",
+    "rSlope",
+    "rIntcpt",
+    "Species",
+    "BaselineMethod"
+   ],
+   "n_df_columns": 29,
+   "top_level_elements": [
+    "df",
+    "resTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C10_01.rgp",
+    "C10_02.rgp",
+    "C10_03.rgp",
+    "C10_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B"
+   ],
+   "instruments": [
+    "PD400-9003"
+   ],
+   "firmware": [
+    "1.76"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C10_01.rgp": false,
+    "C10_02.rgp": false,
+    "C10_03.rgp": false,
+    "C10_04.rgp": false
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,4 of 5; ids/text/serials/coords replaced",
+    "resTraces": "positional: kept 4 of 5",
+    "ringData": "kept 33 of 42 rows by FileName",
+    "rPos": "positional: kept 4 of 5",
+    "version": "unchanged"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C11",
+   "kind": "resi",
+   "path": "resi/C11/C11.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "R version 4.4.0 (2024-04-24 ucrt)",
+   "df_version_column": "Version 5.0.0",
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "TreeClass",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "Version",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "EqnType"
+   ],
+   "n_df_columns": 42,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C11_01.rgp",
+    "C11_02.rgp",
+    "C11_03.rgp",
+    "C11_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD500-9004"
+   ],
+   "firmware": [
+    "1.79"
+   ],
+   "resource": [
+    "HighDensitySoftwood"
+   ],
+   "has_feed": true,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C11_01.rgp": true,
+    "C11_03.rgp": true,
+    "C11_04.rgp": true,
+    "C11_02.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,5 of 150; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 4 of 150 by FileName",
+    "denTraces": "NULL, unchanged",
+    "cumDenTraces": "NULL, unchanged",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "feedTraces": "positional: kept 4 of 151 (original had 1 trailing extra element(s), dropped)",
+    "ringData": "kept 70 of 2650 rows by FileName",
+    "rPos": "positional: kept 4 of 150",
+    "version": "unchanged",
+    "boardMOE": "unchanged",
+    "regVar": "constant table with 149 rows for 150 traces; kept 3 rows (same shortfall)"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "feedTraces: positional: kept 4 of 151 (original had 1 trailing extra element(s), dropped)",
+    "regVar: constant table with 149 rows for 150 traces; kept 3 rows (same shortfall)",
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "C12",
+   "kind": "resi",
+   "path": "resi/C12/C12.Resi",
+   "format": "RDS (saveRDS, gzip, version 2)",
+   "app_version": null,
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "FeedSpeed",
+    "RPM",
+    "SampleDate",
+    "Comment",
+    "TraceType",
+    "AWVModel",
+    "DBHOB",
+    "UBDIA",
+    "BarkThickness",
+    "PrAWV",
+    "PrMOE",
+    "PrOWDensity",
+    "PrCoreDensity",
+    "EntryRadius",
+    "ExitRadius",
+    "RegSlope",
+    "RegIntcpt"
+   ],
+   "n_df_columns": 19,
+   "top_level_elements": [
+    "AddProjectRDS",
+    "AWVModel",
+    "BLCorr",
+    "corrTraces",
+    "df",
+    "manualAllocate",
+    "pithAllocate",
+    "regVar",
+    "reRunMethod",
+    "resTraces",
+    "rIntcpt",
+    "rPos",
+    "rSlope",
+    "traceChoices",
+    "traceNum",
+    "trimTrace"
+   ],
+   "nonempty_elements": [
+    "AddProjectRDS",
+    "AWVModel",
+    "BLCorr",
+    "corrTraces",
+    "df",
+    "manualAllocate",
+    "pithAllocate",
+    "reRunMethod",
+    "resTraces",
+    "rIntcpt",
+    "rPos",
+    "rSlope",
+    "traceChoices",
+    "traceNum",
+    "trimTrace"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C12_01.rgp",
+    "C12_02.rgp",
+    "C12_03.rgp",
+    "C12_04.rgp"
+   ],
+   "trace_formats": [
+    "bin"
+   ],
+   "trace_types": [
+    "P-B"
+   ],
+   "instruments": [
+    "PD400-9008"
+   ],
+   "firmware": [
+    "1.32"
+   ],
+   "resource": [],
+   "has_feed": false,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": false,
+   "rdata_loads": false,
+   "rdata_error": "ValueError: 131072 is not a valid RObjectType",
+   "rdata_loads_original": false,
+   "resiresultset_loads": false,
+   "resiresultset_error": "ValueError: 131072 is not a valid RObjectType",
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": null,
+   "coordinates_consistent": null,
+   "element_actions": {
+    "AddProjectRDS": "unchanged",
+    "AWVModel": "unchanged",
+    "BLCorr": "unchanged",
+    "corrTraces": "positional: kept 4 of 4",
+    "df": "kept rows 1,2,3,4 of 4; ids/text/serials/coords replaced",
+    "manualAllocate": "unchanged",
+    "pithAllocate": "unchanged",
+    "regVar": "NULL, unchanged",
+    "reRunMethod": "unchanged",
+    "resTraces": "positional: kept 4 of 4",
+    "rIntcpt": "unchanged",
+    "rPos": "positional: kept 4 of 4",
+    "rSlope": "unchanged",
+    "traceChoices": "unchanged",
+    "traceNum": "unchanged",
+    "trimTrace": "unchanged",
+    ".impl$.dependents": "emptied 7 reactive dependency entries"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "saved by an old Shiny app as a reactivevalues object (R6/environments); anonymised in place inside its .values environment. Its reactive dependency registry (impl$.dependents, Shiny contexts capturing the whole server environment incl. source code and local paths) was emptied; everything else, including the R6 object and its methods, is as saved",
+    "rdata fails on the original (ValueError: 4095 is not a valid RObjectType) and on this file (ValueError: 131072 is not a valid RObjectType)",
+    "df$FileName originally named a .txt export of this trace; it now names the source .rgp file"
+   ]
+  },
+  {
+   "id": "C13",
+   "kind": "resi",
+   "path": "resi/C13/C13.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "Version 4.3.2",
+   "df_version_column": null,
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "TreeClass",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "RPMCoef",
+    "EqnType"
+   ],
+   "n_df_columns": 42,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version"
+   ],
+   "n_traces": 3,
+   "trace_files": [
+    "C13_01.pdc",
+    "C13_02.pdc",
+    "C13_03.pdc"
+   ],
+   "trace_formats": [
+    "pdc"
+   ],
+   "trace_types": [
+    "B-B",
+    "P-B"
+   ],
+   "instruments": [
+    "PD400-9009",
+    "PD500-9010"
+   ],
+   "firmware": [
+    "1.79"
+   ],
+   "resource": [
+    "SouthernPine"
+   ],
+   "has_feed": true,
+   "traces_have_feed": true,
+   "den_traces": false,
+   "cum_den_traces": false,
+   "coordinates_shifted": true,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C13_01.pdc": true,
+    "C13_02.pdc": true,
+    "C13_03.pdc": true
+   },
+   "coordinates_consistent": [
+    true,
+    true,
+    true
+   ],
+   "element_actions": {
+    "df": "kept rows 1,192,266 of 270; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 3 of 270 by FileName",
+    "denTraces": "NULL, unchanged",
+    "cumDenTraces": "NULL, unchanged",
+    "Tppl.Mean.Density": "NULL, unchanged",
+    "feedTraces": "positional: kept 3 of 270",
+    "ringData": "kept 25 of 25 rows by FileName",
+    "rPos": "positional: kept 3 of 270",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged",
+    "regVar": "NULL, unchanged"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T001",
+   "kind": "trace",
+   "path": "traces/T001.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.29 ann",
+   "firmware": "1.29",
+   "instruments": [
+    "PD400-9011"
+   ],
+   "species": null,
+   "n_drill": 2504,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T002",
+   "kind": "trace",
+   "path": "traces/T002.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.30",
+   "firmware": "1.30",
+   "instruments": [
+    "PD400-9011"
+   ],
+   "species": null,
+   "n_drill": 1703,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T003",
+   "kind": "trace",
+   "path": "traces/T003.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.31 dfir",
+   "firmware": "1.31",
+   "instruments": [
+    "PD400-9012"
+   ],
+   "species": "dfir",
+   "n_drill": 2824,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T004",
+   "kind": "trace",
+   "path": "traces/T004.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.31 pinaster",
+   "firmware": "1.31",
+   "instruments": [
+    "PD400-9012"
+   ],
+   "species": "pinaster",
+   "n_drill": 2156,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T005",
+   "kind": "trace",
+   "path": "traces/T005.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.31 southernpine ann",
+   "firmware": "1.31",
+   "instruments": [
+    "PD400-9009"
+   ],
+   "species": "southernpine",
+   "n_drill": 3459,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T006",
+   "kind": "trace",
+   "path": "traces/T006.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.31",
+   "firmware": "1.31",
+   "instruments": [
+    "PD400-9007"
+   ],
+   "species": "radiatapine",
+   "n_drill": 2348,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T007",
+   "kind": "trace",
+   "path": "traces/T007.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.32 feed",
+   "firmware": "1.32",
+   "instruments": [
+    "PD400-9013"
+   ],
+   "species": null,
+   "n_drill": 4005,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T008",
+   "kind": "trace",
+   "path": "traces/T008.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.32 feed ann",
+   "firmware": "1.32",
+   "instruments": [
+    "PD400-9013"
+   ],
+   "species": null,
+   "n_drill": 3770,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T009",
+   "kind": "trace",
+   "path": "traces/T009.rgp",
+   "format": "bin",
+   "extension": ".rgp",
+   "selected_as": "bin fw1.32 dfir",
+   "firmware": "1.32",
+   "instruments": [
+    "PD400-9012"
+   ],
+   "species": "dfir",
+   "n_drill": 3435,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": []
+  },
+  {
+   "id": "T010",
+   "kind": "trace",
+   "path": "traces/T010.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.75",
+   "firmware": "1.75",
+   "instruments": [
+    "PD400-9014"
+   ],
+   "species": null,
+   "n_drill": 2496,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 2,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T011",
+   "kind": "trace",
+   "path": "traces/T011.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.75",
+   "firmware": "1.75",
+   "instruments": [
+    "PD400-9014"
+   ],
+   "species": null,
+   "n_drill": 4013,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 2,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T012",
+   "kind": "trace",
+   "path": "traces/T012.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.76 E.fastigata",
+   "firmware": "1.76",
+   "instruments": [
+    "PD400-9015"
+   ],
+   "species": "E.fastigata",
+   "n_drill": 4015,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T013",
+   "kind": "trace",
+   "path": "traces/T013.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.78 rimu",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9016"
+   ],
+   "species": "rimu",
+   "n_drill": 4019,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T014",
+   "kind": "trace",
+   "path": "traces/T014.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.76",
+   "firmware": "1.76",
+   "instruments": [
+    "PD400-9007"
+   ],
+   "species": null,
+   "n_drill": 3776,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T015",
+   "kind": "trace",
+   "path": "traces/T015.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.77 feed",
+   "firmware": "1.77",
+   "instruments": [
+    "PD400-9007"
+   ],
+   "species": null,
+   "n_drill": 3283,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T016",
+   "kind": "trace",
+   "path": "traces/T016.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.77 ann",
+   "firmware": "1.77",
+   "instruments": [
+    "PD400-9001"
+   ],
+   "species": "radiatapine",
+   "n_drill": 4010,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T017",
+   "kind": "trace",
+   "path": "traces/T017.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.78 ann",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9001"
+   ],
+   "species": "radiatapine",
+   "n_drill": 4012,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T018",
+   "kind": "trace",
+   "path": "traces/T018.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.78",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9001"
+   ],
+   "species": "radiatapine",
+   "n_drill": 1951,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T019",
+   "kind": "trace",
+   "path": "traces/T019.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.78 kps",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9012"
+   ],
+   "species": null,
+   "n_drill": 2877,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text",
+    "annotation traceid (archive row id) set to null"
+   ]
+  },
+  {
+   "id": "T020",
+   "kind": "trace",
+   "path": "traces/T020.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json fw1.78 kps nofeed",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9016"
+   ],
+   "species": "radiatapine",
+   "n_drill": 2605,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 3,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text",
+    "annotation traceid (archive row id) set to null"
+   ]
+  },
+  {
+   "id": "T021",
+   "kind": "trace",
+   "path": "traces/T021.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json feed",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9012"
+   ],
+   "species": null,
+   "n_drill": 1155,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T022",
+   "kind": "trace",
+   "path": "traces/T022.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json corymbia PD500",
+   "firmware": "1.79",
+   "instruments": [
+    "PD500-9004"
+   ],
+   "species": "corymbia",
+   "n_drill": 1500,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T023",
+   "kind": "trace",
+   "path": "traces/T023.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json southernpine PD500",
+   "firmware": "1.79",
+   "instruments": [
+    "PD500-9004"
+   ],
+   "species": "southernpine",
+   "n_drill": 1500,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T024",
+   "kind": "trace",
+   "path": "traces/T024.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json",
+   "firmware": "1.77",
+   "instruments": [
+    "PD400-9002"
+   ],
+   "species": "radiatapine",
+   "n_drill": 2610,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": false,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text",
+    "expected.json (archived parse) differs from the current reader's to_json() in: app, assessment, checksum, header, profile, wiPoleResult"
+   ]
+  },
+  {
+   "id": "T025",
+   "kind": "trace",
+   "path": "traces/T025.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json",
+   "firmware": "1.79",
+   "instruments": [
+    "PD400-9017"
+   ],
+   "species": null,
+   "n_drill": 3400,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T026",
+   "kind": "trace",
+   "path": "traces/T026.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json",
+   "firmware": "1.79",
+   "instruments": [
+    "PD400-9011"
+   ],
+   "species": null,
+   "n_drill": 3002,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T027",
+   "kind": "trace",
+   "path": "traces/T027.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json rgp PD400",
+   "firmware": "1.79",
+   "instruments": [
+    "PD400-9008"
+   ],
+   "species": null,
+   "n_drill": 4015,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T028",
+   "kind": "trace",
+   "path": "traces/T028.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json E.nitens",
+   "firmware": "1.79",
+   "instruments": [
+    "PD400-9003"
+   ],
+   "species": "E.nitens",
+   "n_drill": 1989,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T029",
+   "kind": "trace",
+   "path": "traces/T029.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json corymbia",
+   "firmware": "1.79",
+   "instruments": [
+    "PD500-9004"
+   ],
+   "species": "corymbia",
+   "n_drill": 459,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T030",
+   "kind": "trace",
+   "path": "traces/T030.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json PD500 nospecies",
+   "firmware": "1.79",
+   "instruments": [
+    "PD500-9004"
+   ],
+   "species": null,
+   "n_drill": 3450,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T031",
+   "kind": "trace",
+   "path": "traces/T031.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json",
+   "firmware": "1.78",
+   "instruments": [
+    "PD400-9016"
+   ],
+   "species": null,
+   "n_drill": 2351,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": false,
+   "n_annotations": 0,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T032",
+   "kind": "trace",
+   "path": "traces/T032.pdc",
+   "format": "pdc",
+   "extension": ".pdc",
+   "selected_as": "pdc PD500",
+   "firmware": "1.79",
+   "instruments": [
+    "PD500-9018"
+   ],
+   "species": null,
+   "n_drill": 3992,
+   "has_feed": true,
+   "has_expected_json": true,
+   "expected_equals_current_reader": false,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": true,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "JSON checksum fields are the originals and no longer match the edited text",
+    "expected.json (archived parse) differs from the current reader's to_json() in: app, assessment, assessments, checksum, header, profile, wiPoleResult"
+   ]
+  },
+  {
+   "id": "T033",
+   "kind": "trace",
+   "path": "traces/T033.txt",
+   "format": "txt1",
+   "extension": ".txt",
+   "selected_as": "txt fw1.29",
+   "firmware": "1.29",
+   "instruments": [
+    "PD400-9011"
+   ],
+   "species": null,
+   "n_drill": 1716,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": false,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "expected.json (archived parse) differs from the current reader's to_json() in: header"
+   ]
+  },
+  {
+   "id": "T034",
+   "kind": "trace",
+   "path": "traces/T034.txt",
+   "format": "txt1",
+   "extension": ".txt",
+   "selected_as": "txt fw1.30",
+   "firmware": "1.30",
+   "instruments": [
+    "PD400-9011"
+   ],
+   "species": null,
+   "n_drill": 1556,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": false,
+   "has_feature_locations": false,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "expected.json (archived parse) differs from the current reader's to_json() in: header"
+   ]
+  },
+  {
+   "id": "T035",
+   "kind": "trace",
+   "path": "traces/T035.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json with feature_locations (raw from file share)",
+   "firmware": "1.77",
+   "instruments": [
+    "PD400-9001"
+   ],
+   "species": "radiatapine",
+   "n_drill": 2845,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": true,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "archive row has no raw bytes; original file taken from the file share (drill array identical to the archived trace)",
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T036",
+   "kind": "trace",
+   "path": "traces/T036.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json with feature_locations (raw from file share)",
+   "firmware": "1.77",
+   "instruments": [
+    "PD400-9001"
+   ],
+   "species": "radiatapine",
+   "n_drill": 3043,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": true,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "archive row has no raw bytes; original file taken from the file share (drill array identical to the archived trace)",
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
+   "id": "T037",
+   "kind": "trace",
+   "path": "traces/T037.rgp",
+   "format": "json",
+   "extension": ".rgp",
+   "selected_as": "json with feature_locations (raw from file share)",
+   "firmware": "1.77",
+   "instruments": [
+    "PD400-9001"
+   ],
+   "species": null,
+   "n_drill": 3951,
+   "has_feed": false,
+   "has_expected_json": true,
+   "expected_equals_current_reader": true,
+   "has_feature_locations": true,
+   "n_annotations": 1,
+   "coordinates_shifted": false,
+   "trace_check_problems": [],
+   "unreviewed_strings": [],
+   "notes": [
+    "archive row has no raw bytes; original file taken from the file share (drill array identical to the archived trace)",
+    "JSON checksum fields are the originals and no longer match the edited text"
+   ]
+  }
+ ],
+ "checks": {
+  "original_identifiers_searched": 3456,
+  "original_identifiers_found": 0
+ }
+}

@@ -123,7 +123,7 @@ class TestToDeltalakeRealParity(unittest.TestCase):
             spark_table = Path(tmpdir) / "spark_merge"
 
             # 1. Initial merge creation
-            res_py1 = rs1.to_deltalake(py_table, mode="merge", merge_key="FileName", spark=None)
+            res_py1 = rs1.to_deltalake(py_table, mode="merge", merge_key="FileName", engine="deltalake")
             res_sp1 = rs1.to_deltalake(spark_table, mode="merge", merge_key="FileName", spark=self.spark)
 
             self.assertEqual(res_py1.num_inserted, res_sp1.num_inserted)
@@ -136,7 +136,7 @@ class TestToDeltalakeRealParity(unittest.TestCase):
 
             # 2. Subsequent merge update & insert
             rs2 = create_updated_resultset()
-            res_py2 = rs2.to_deltalake(py_table, mode="merge", merge_key="FileName", spark=None)
+            res_py2 = rs2.to_deltalake(py_table, mode="merge", merge_key="FileName", engine="deltalake")
             res_sp2 = rs2.to_deltalake(spark_table, mode="merge", merge_key="FileName", spark=self.spark)
 
             self.assertEqual(res_py2.num_inserted, res_sp2.num_inserted)
@@ -156,11 +156,11 @@ class TestToDeltalakeRealParity(unittest.TestCase):
             spark_table = Path(tmpdir) / "spark_append"
 
             # Initial write
-            rs.to_deltalake(py_table, mode="overwrite", spark=None)
+            rs.to_deltalake(py_table, mode="overwrite", engine="deltalake")
             rs.to_deltalake(spark_table, mode="overwrite", spark=self.spark)
 
             # Append run
-            res_py = rs.to_deltalake(py_table, mode="append", spark=None)
+            res_py = rs.to_deltalake(py_table, mode="append", engine="deltalake")
             res_sp = rs.to_deltalake(spark_table, mode="append", spark=self.spark)
 
             self.assertEqual(res_py.num_inserted, res_sp.num_inserted)
@@ -180,11 +180,11 @@ class TestToDeltalakeRealParity(unittest.TestCase):
             spark_table = Path(tmpdir) / "spark_overwrite"
 
             # Initial write rs1
-            rs1.to_deltalake(py_table, mode="overwrite", spark=None)
+            rs1.to_deltalake(py_table, mode="overwrite", engine="deltalake")
             rs1.to_deltalake(spark_table, mode="overwrite", spark=self.spark)
 
             # Overwrite with rs2
-            res_py = rs2.to_deltalake(py_table, mode="overwrite", spark=None)
+            res_py = rs2.to_deltalake(py_table, mode="overwrite", engine="deltalake")
             res_sp = rs2.to_deltalake(spark_table, mode="overwrite", spark=self.spark)
 
             self.assertEqual(res_py.num_inserted, res_sp.num_inserted)
@@ -207,7 +207,7 @@ class TestToDeltalakeRealParity(unittest.TestCase):
                 mode="overwrite",
                 lowercase_columns=True,
                 column_mapping={"TreeID": "tree_identifier"},
-                spark=None,
+                engine="deltalake",
             )
 
             rs.to_deltalake(
@@ -235,7 +235,7 @@ class TestToDeltalakeRealParity(unittest.TestCase):
             py_table = Path(tmpdir) / "py_compound"
             spark_table = Path(tmpdir) / "spark_compound"
 
-            rs1.to_deltalake(py_table, mode="overwrite", spark=None)
+            rs1.to_deltalake(py_table, mode="overwrite", engine="deltalake")
             rs1.to_deltalake(spark_table, mode="overwrite", spark=self.spark)
 
             rs2 = ResiResultSet()
@@ -250,7 +250,7 @@ class TestToDeltalakeRealParity(unittest.TestCase):
                 )
             )
 
-            res_py = rs2.to_deltalake(py_table, mode="merge", merge_key=["FileName", "TreeID"], spark=None)
+            res_py = rs2.to_deltalake(py_table, mode="merge", merge_key=["FileName", "TreeID"], engine="deltalake")
             res_sp = rs2.to_deltalake(spark_table, mode="merge", merge_key=["FileName", "TreeID"], spark=self.spark)
 
             self.assertEqual(res_py.num_inserted, res_sp.num_inserted)
@@ -261,6 +261,39 @@ class TestToDeltalakeRealParity(unittest.TestCase):
 
             pd.testing.assert_frame_equal(df_py, df_sp, check_like=True)
 
+
+    def _engine(self, path):
+        info = DeltaTable(str(path)).history(1)[0]
+        return 'spark' if 'Spark' in str(info.get('engineInfo', '')) else 'deltalake'
+
+    def test_engine_choice(self):
+        """With a session active, engine and storage_options decide the engine."""
+        rs = create_sample_resultset()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for name, kwargs, expected in [
+                ("auto", {}, 'spark'),
+                ("rs", {"engine": "deltalake"}, 'deltalake'),
+                ("opts", {"storage_options": {"timeout": "120s"}}, 'deltalake'),
+            ]:
+                path = Path(tmpdir) / name
+                rs.to_deltalake(path, mode="merge", merge_key="FileName", **kwargs)
+                self.assertEqual(self._engine(path), expected, name)
+
+    def test_schema_evolution_leaves_session_setting(self):
+        """A schema-merging merge adds columns without changing the session."""
+        key = "spark.databricks.delta.schema.autoMerge.enabled"
+        before = self.spark.conf.get(key, None)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "evolve"
+            create_sample_resultset().to_deltalake(path, mode="merge", spark=self.spark)
+            rs = ResiResultSet()
+            rs.results.append(ResiResult(filename="trace9.rgp",
+                                         descriptors={"FileName": "trace9.rgp", "NewColumn": 1.5}))
+            rs.to_deltalake(path, mode="merge", spark=self.spark)
+            df = DeltaTable(str(path)).to_pandas()
+            self.assertIn("NewColumn", df.columns)
+            self.assertEqual(df.loc[df.FileName == "trace9.rgp", "NewColumn"].iloc[0], 1.5)
+        self.assertEqual(self.spark.conf.get(key, None), before)
 
 if __name__ == "__main__":
     unittest.main()

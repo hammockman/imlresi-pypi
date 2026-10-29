@@ -88,8 +88,9 @@ rs.to_deltalake('Tables/resi', mode='merge')     # needs imlresi[delta] or imlre
 ```
 
 `to_deltalake` uses PySpark when a Spark session is active and delta-rs
-otherwise. Merging never replaces an existing table; only `mode='overwrite'`
-does.
+otherwise; pass `engine='deltalake'` or `engine='spark'` to choose, and
+`storage_options` imply delta-rs. Merging never replaces an existing table;
+only `mode='overwrite'` does.
 
 
 ## Units

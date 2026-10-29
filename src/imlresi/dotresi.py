@@ -1440,7 +1440,7 @@ class ResiResultSet:
 
         return result_set
 
-    def to_deltalake(self, table_or_path, mode="merge", merge_key="FileName", schema=None, schema_mode="merge", storage_options=None, spark=None, lowercase_columns=False, column_mapping=None):
+    def to_deltalake(self, table_or_path, mode="merge", merge_key="FileName", schema=None, schema_mode="merge", storage_options=None, spark=None, lowercase_columns=False, column_mapping=None, engine="auto"):
         """
         Merges or exports the result set records directly into a Delta Lake table.
 
@@ -1454,6 +1454,9 @@ class ResiResultSet:
         :param schema_mode: Schema evolution mode ('merge' or 'overwrite') when appending.
         :param storage_options: Optional storage options dict (e.g. for Azure Lakehouse ABFSS or AWS S3).
         :param spark: Optional PySpark SparkSession instance. If None, automatically detects active PySpark session.
+        :param engine: 'spark', 'deltalake' (delta-rs) or 'auto' (default): Spark
+            when a session is passed or active, unless storage_options are given
+            (Spark doesn't use them).
         :param lowercase_columns: If True, lowercases all column names and removes dots (e.g. TreeID->treeid, RPMCoef.a->rpmcoefa).
         :param column_mapping: Optional dict of source_col -> target_col mappings.
         :return: DeltaMergeResult(num_inserted, num_updated, metrics), or None
@@ -1505,13 +1508,19 @@ class ResiResultSet:
             if not keys or missing:
                 raise ValueError(f"merge_key must name columns of the data; not found: {missing or keys}")
 
-        # Auto-detect active PySpark session if not explicitly passed
-        if spark is None and 'pyspark' in sys.modules:
+        if engine not in ("auto", "spark", "deltalake"):
+            raise ValueError(f"engine must be 'auto', 'spark' or 'deltalake', not {engine!r}")
+        if engine == "deltalake" or (engine == "auto" and spark is None and storage_options):
+            spark = None
+        elif spark is None and 'pyspark' in sys.modules:
+            # Auto-detect active PySpark session if not explicitly passed
             try:
                 from pyspark.sql import SparkSession
                 spark = SparkSession.getActiveSession()
             except Exception:
                 spark = None
+        if engine == "spark" and spark is None:
+            raise ValueError("engine='spark' needs a SparkSession: pass spark= or start one")
 
         # If PySpark session is active, use PySpark native DeltaTable merge engine
         if spark is not None:
@@ -1597,10 +1606,6 @@ class ResiResultSet:
 
             elif mode == 'merge':
                 if schema_mode == 'merge':
-                    try:
-                        spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")
-                    except Exception:
-                        pass
                     matching_cols = list(spark_df.columns)
                 else:
                     try:
@@ -1611,13 +1616,29 @@ class ResiResultSet:
 
                 update_map = {f"`{c}`": f"source.`{c}`" for c in matching_cols}
 
-                (
+                merger = (
                     pyspark_dt.alias("target")
                     .merge(spark_df.alias("source"), predicate)
                     .whenMatchedUpdate(set=update_map)
                     .whenNotMatchedInsert(values=update_map)
-                    .execute()
                 )
+                if schema_mode == 'merge' and hasattr(merger, 'withSchemaEvolution'):
+                    merger.withSchemaEvolution().execute()
+                elif schema_mode == 'merge':
+                    # older Delta: schema evolution is a session setting, so
+                    # set it for this merge only
+                    key = "spark.databricks.delta.schema.autoMerge.enabled"
+                    prev = spark.conf.get(key, None)
+                    spark.conf.set(key, "true")
+                    try:
+                        merger.execute()
+                    finally:
+                        if prev is None:
+                            spark.conf.unset(key)
+                        else:
+                            spark.conf.set(key, prev)
+                else:
+                    merger.execute()
                 try:
                     last_op = pyspark_dt.history(1).collect()[0]
                     op_metrics = last_op.operationMetrics or {}

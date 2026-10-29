@@ -83,3 +83,10 @@ def test_merge_key_must_be_a_column(seeded, key):
 def test_compound_merge_key(seeded):
     make_set('a', 'q', tree='T').to_deltalake(seeded, mode='merge', merge_key=['FileName', 'TreeID'])
     assert file_names(seeded) == ['a', 'b', 'c', 'q']
+
+
+def test_engine_must_be_known(seeded):
+    rs = ResiResultSet()
+    rs.results.append(ResiResult('x.rgp', descriptors={'FileName': 'x.rgp'}))
+    with pytest.raises(ValueError, match='engine'):
+        rs.to_deltalake(seeded, engine='duckdb')

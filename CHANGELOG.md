@@ -26,6 +26,12 @@
   URIs that aren't OneLake were silently rewritten to a wrong lakehouse path;
   they now raise `ValueError`. `to_dotresi` resolves paths the same way as
   reading does, so `Files/x.Resi` names the same file in both.
+- `to_deltalake` used Spark whenever a session was active, even when
+  given `storage_options` (which Spark ignores) or when delta-rs was
+  wanted; the new `engine` argument chooses, and `storage_options` imply
+  delta-rs. A schema-merging Spark merge set
+  `spark.databricks.delta.schema.autoMerge.enabled` for the rest of the
+  session; it now uses the merge's own schema evolution.
 
 ## 0.0.46 (2026-10-30)
 

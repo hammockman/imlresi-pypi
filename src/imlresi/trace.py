@@ -67,7 +67,9 @@ def load_iml_json(fn):
     from binary to json formats it embeds TAB (\x09) characters in
     the "remark field. This breaks JSON parsers.
     """
-    with open(fn, 'r') as f:
+    # IML's JSON is UTF-8 (e.g. the "°" and "±" in .pdc locations); don't
+    # depend on the platform's default encoding
+    with open(fn, 'r', encoding='utf-8') as f:
         s = f.read()
     s = s.replace("\t", "\\t")
     
@@ -97,6 +99,18 @@ def identify_format(fn):
             fmt = 'txt1'
 
     return fmt
+
+
+def read_text_lines(fn):
+    """Lines of a PD-Tools text export. These come from Windows, so fall
+    back to cp1252 when the file isn't valid UTF-8."""
+    with open(fn, 'rb') as f:
+        b = f.read()
+    try:
+        s = b.decode('utf-8')
+    except UnicodeDecodeError:
+        s = b.decode('cp1252', errors='replace')
+    return s.splitlines()
 
 
 def read_bin(fn):
@@ -182,19 +196,21 @@ def read_bin(fn):
         # torque data
         # data stored as a sequence of little-endian 2-byte unsigned int
         data = f.read()
-        i0 = 0
-        while True:
-            torques.append(unpack('<H', data[i0:i0+2])[0]/100)
-            i0 += 2
-            if i0+2 > len(data):
-                break
-        rem = data[i0:]
+        nvals = len(data) // 2
+        torques = [v/100 for v in unpack('<%dH' % nvals, data[:2*nvals])]
+        rem = data[2*nvals:]
+
+    if rem:
+        logger.warning("%s: ignoring %i trailing byte(s)" % (fn, len(rem)))
+    if not torques:
+        raise ValueError(f"{fn}: no drill data in binary trace")
 
     # check that samples/mm * drill_depth = len(torques)
-    assert len(rem) == 0, "%i bytes remain unprocessed" % len(rem)
     npts = settings['samples_per_mm']*settings['drill_depth']
     feeds = []
-    if not npts == len(torques):
+    if npts <= 0:
+        logger.warning("%s: samples_per_mm*drill_depth is %s; can't separate feed data" % (fn, npts))
+    elif not npts == len(torques):
         if (len(torques) % npts) == 0:
             # probably the file contains feed force data
             feeds = torques[int(npts):]
@@ -286,7 +302,7 @@ def read_txt1(fn):
             feed = None
         return drill, feed
 
-    lines = [line.strip() for line in open(fn, 'r')]
+    lines = [line.strip() for line in read_text_lines(fn)]
     drill, feed = read_drill_feed(lines)
     return {
         'raw': "\n".join(lines),
@@ -341,7 +357,7 @@ def read_txt2(fn):
             'comment': lines[9],
         }
 
-    lines = [line.strip() for line in open(fn, 'r')]
+    lines = [line.strip() for line in read_text_lines(fn)]
     return {
         'raw': "\n".join(lines),
         'header': read_header(lines),
@@ -438,8 +454,8 @@ def read_json(fn):
         J, raw = load_iml_json(fn)
     except Exception as err:
         raise ValueError(f'{fn}:{err}. Invalid JSON?')
-    assert J["device"] == "0F02"
-    assert J["version"] == 2
+    if J.get("device") != "0F02" or J.get("version") != 2:
+        raise ValueError(f'{fn}: unsupported trace (device={J.get("device")!r}, version={J.get("version")!r})')
 
     # make date and time encoding consistent
     if 'dateDay' in J['header']: # JSON format
@@ -627,8 +643,8 @@ class Trace():
         else:
             s += '%s' % self.drill + "\n"
         s += '*** FEED FORCE ***\n'
-        if len(self.feed) > 20:
-            s += '%s ... %s\n' % (self.drill[:13], self.drill[-3:])
+        if self.feed is not None and len(self.feed) > 20:
+            s += '%s ... %s\n' % (self.feed[:13], self.feed[-3:])
         else:
             s += '%s' % self.feed + "\n"
 
@@ -906,7 +922,9 @@ class Trace():
                 "BaselineMethod": "Linear",
                 "TreeClass": "Density",
             }
-        inp = ctrlset | {'rgp': self.to_dict(), 'trace_filename': self.trace_filename}
+        # send only the file name: the local path is nobody else's business
+        # (and a Path object isn't JSON serialisable)
+        inp = ctrlset | {'rgp': self.to_dict(), 'trace_filename': Path(self.trace_filename).name if self.trace_filename else None}
 
         # check that trace_format is specified
         if "trace_format" not in inp:

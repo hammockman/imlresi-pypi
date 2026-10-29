@@ -580,7 +580,10 @@ def create_jdata(mapdict, meta, data):
         try:
             rgp['header'][k] = f(meta)
         except KeyError:
-            rgp['header'][k] = None
+            # keep the template default: older formats lack some settings
+            # (feedOn, tiltOn, ...), and writing None instead of 0 changes
+            # Trace.hash() for traces already stored under the old hash
+            pass
 
     return rgp
 

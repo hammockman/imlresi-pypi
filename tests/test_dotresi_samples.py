@@ -87,3 +87,28 @@ def test_dob_falls_back_to_dbhob_on_load(tmp_path):
     back = ResiResultSet(out)
     for a, b in zip(src, back):
         assert b.DOB == pytest.approx(a.DOB)
+
+
+def test_compact_sequence_bomb_is_refused(tmp_path):
+    # 1:2e9 saved by R is stored as its two ends: ~200 bytes asking for 8 GB
+    import imlresi.dotresi as d
+    src = Path(__file__).parent / 'data' / 'hostile' / 'altrep_bomb.Resi'
+    with pytest.raises(ValueError, match='compact R sequence'):
+        d.ResiResultSet(src)
+
+
+def test_decompression_bomb_is_refused(tmp_path, monkeypatch):
+    import gzip
+    import imlresi.dotresi as d
+    src = Path(__file__).parent / 'data' / 'corpus' / 'resi' / 'C03' / 'C03.Resi'
+    monkeypatch.setattr(d, 'MAX_RESI_BYTES', 200_000)
+    assert src.stat().st_size < 200_000 < len(gzip.decompress(src.read_bytes()))
+    with pytest.raises(ValueError, match='decompressed'):
+        d.ResiResultSet(src)
+
+
+def test_parse_limit_leaves_real_files_alone():
+    from imlresi.dotresi import parse_rds
+    for p in sorted((Path(__file__).parent / 'data' / 'corpus' / 'resi').glob('C*/C*.Resi')):
+        if p.parent.name != 'C12':  # unreadable by rdata anyway
+            assert parse_rds(p) is not None

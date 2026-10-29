@@ -32,6 +32,11 @@
   delta-rs. A schema-merging Spark merge set
   `spark.databricks.delta.schema.autoMerge.enabled` for the rest of the
   session; it now uses the merge's own schema evolution.
+- Reading a `.Resi` file had no size limits, so a file of a few hundred
+  bytes could make it allocate gigabytes, either as a compression bomb or
+  as a compact R sequence (`1:2e9`, stored as just its ends). Data beyond
+  `imlresi.dotresi.MAX_RESI_BYTES` (1 GiB once decompressed; real files
+  reach ~160 MB) now raises `ValueError`.
 
 ### Changed
 

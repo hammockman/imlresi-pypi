@@ -6,6 +6,12 @@
 
 - `imlresi[delta]` installed pyarrow 26, which needs numpy 2, alongside
   imlresi's numpy 1 and failed on import; the extra now caps `pyarrow <26`.
+- `recompute_den_trace()` with the NonLinear baseline used FQResi's current
+  correction for every app version. Files from app 5.0–5.4 (and
+  4.5.4–4.5.x) were made with the earlier void-volume correction; the
+  library now follows the app version, and matches app 5.0.0 densities
+  exactly (it was ~1.2% off). Eglobulus used the wrong sigmoid offset
+  (6 instead of 7.5).
 
 ## 0.0.46 (2026-10-30)
 

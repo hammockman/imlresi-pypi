@@ -1680,6 +1680,146 @@
    ]
   },
   {
+   "id": "C14",
+   "kind": "resi",
+   "path": "resi/C14/C14.Resi",
+   "format": "RDS (saveRDS, gzip, version 3)",
+   "app_version": "R version 4.4.0 (2024-04-24 ucrt)",
+   "df_version_column": "Version 5.0.0",
+   "df_columns": [
+    "FileName",
+    "TreeID",
+    "ResiCode",
+    "SampleDate",
+    "TraceType",
+    "MOEmodel",
+    "CheckStatus",
+    "AdjustRecord",
+    "DOB",
+    "UBDIA",
+    "BarkThickness",
+    "ExitBarkThickness",
+    "OWDensity",
+    "CoreDensity",
+    "DiscDensity",
+    "PrAWV",
+    "PrMOE",
+    "EntryRadius",
+    "EntryDensity",
+    "ExitRadius",
+    "ExitDensity",
+    "Decay",
+    "DiscArea",
+    "RingCount",
+    "BLCorrDen",
+    "FeedSpeed",
+    "RPM",
+    "Comment",
+    "Resource",
+    "BaselineMethod",
+    "Standardised",
+    "RingMethod",
+    "OffsetDrill",
+    "OffsetFeed",
+    "Lat",
+    "Lon",
+    "WebSite",
+    "Version",
+    "RemoteSha",
+    "rSlope",
+    "rIntcpt",
+    "EqnType"
+   ],
+   "n_df_columns": 42,
+   "top_level_elements": [
+    "df",
+    "FRdf",
+    "RSdf",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "Tppl.Mean.Density",
+    "feedTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "boardMOE",
+    "regVar"
+   ],
+   "nonempty_elements": [
+    "df",
+    "resTraces",
+    "denTraces",
+    "cumDenTraces",
+    "ringData",
+    "rPos",
+    "version",
+    "regVar"
+   ],
+   "n_traces": 4,
+   "trace_files": [
+    "C14_01.rgp",
+    "C14_02.rgp",
+    "C14_03.rgp",
+    "C14_04.rgp"
+   ],
+   "trace_formats": [
+    "json"
+   ],
+   "trace_types": [
+    "B-B"
+   ],
+   "instruments": [
+    "PD400-9014"
+   ],
+   "firmware": [
+    "1.75"
+   ],
+   "resource": [
+    "RadiataPine"
+   ],
+   "has_feed": false,
+   "traces_have_feed": false,
+   "den_traces": true,
+   "cum_den_traces": true,
+   "coordinates_shifted": false,
+   "rdata_loads": true,
+   "rdata_error": null,
+   "rdata_loads_original": true,
+   "resiresultset_loads": true,
+   "resiresultset_error": null,
+   "resiresultset_warnings": [],
+   "resi_drill_equals_trace_drill": {
+    "C14_01.rgp": true,
+    "C14_02.rgp": true,
+    "C14_03.rgp": true,
+    "C14_04.rgp": true
+   },
+   "coordinates_consistent": null,
+   "element_actions": {
+    "df": "kept rows 1,2,3,9 of 57; ids/text/serials/coords replaced",
+    "FRdf": "NULL, unchanged",
+    "RSdf": "NULL, unchanged",
+    "resTraces": "named: kept 4 of 57 by FileName",
+    "denTraces": "named: kept 4 of 57 by FileName",
+    "cumDenTraces": "named: kept 4 of 57 by FileName",
+    "Tppl.Mean.Density": "named: kept 0 of 57 by FileName",
+    "feedTraces": "unnamed list shorter (35) than df (57); rows can't be matched, emptied",
+    "ringData": "kept 51 of 803 rows by FileName",
+    "rPos": "positional: kept 4 of 57",
+    "version": "unchanged",
+    "boardMOE": "NULL, unchanged",
+    "regVar": "constant table with 56 rows for 57 traces; kept 3 rows (same shortfall)"
+   },
+   "trace_check_problems": {},
+   "notes": [
+    "Tppl.Mean.Density: named: kept 0 of 57 by FileName",
+    "feedTraces: unnamed list shorter (35) than df (57); rows can't be matched, emptied",
+    "regVar: constant table with 56 rows for 57 traces; kept 3 rows (same shortfall)",
+    "JSON trace checksum fields are the originals and no longer match the edited text"
+   ]
+  },
+  {
    "id": "T001",
    "kind": "trace",
    "path": "traces/T001.rgp",

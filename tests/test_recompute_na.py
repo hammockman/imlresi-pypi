@@ -80,3 +80,35 @@ def test_v5_standardisation_selected(result):
     for r in (r4, r5):
         r.descriptors.update({'FeedSpeed': 1000.0, 'RPM': 2500.0})
     assert not np.allclose(r4.recompute_corr_trace(), r5.recompute_corr_trace())
+
+
+@pytest.mark.parametrize('version, method', [
+    ('Version 5.0.0', 'void-intercept'), ('Version 5.1.0', 'void-intercept'),
+    ('Version 5.2.4', 'void'), ('Version 4.5.4', 'void'),
+    ('Version 5.5.1', 'sigmoid'), ('Version 5.6.0', 'sigmoid'), ('Version 4.9.0', 'sigmoid'),
+    ('Version 4.2.4', 'sigmoid'), (None, 'sigmoid'),
+])
+def test_nonlinear_method_follows_app_version(result, version, method):
+    r = copy.deepcopy(result)
+    r.descriptors['Version'] = version
+    assert r._nonlinear_method() == method
+
+
+@pytest.mark.parametrize('version', ['Version 5.0.0', 'Version 5.2.4', 'Version 5.6.0'])
+@pytest.mark.parametrize('na', [None, float('nan')], ids=repr)
+def test_nonlinear_copes_with_na(result, version, na):
+    r = copy.deepcopy(result)
+    r.descriptors.update(Version=version, BaselineMethod='NonLinear')
+    for field in ('rIntcpt', 'rSlope', 'BLCorrDen', 'BarkThickness'):
+        r.descriptors[field] = na
+        assert np.isfinite(r.recompute_den_trace()).all(), field
+
+
+@pytest.mark.parametrize('resource, offset', [('Eglobulus', 7.5), ('Enitens', 6.0), ('HoopPine', 1.5)])
+def test_sigmoid_offset_by_resource(result, resource, offset):
+    # the sigmoid correction is -offset at the cambium
+    r = copy.deepcopy(result)
+    r.descriptors.update(Version='Version 5.6.0', BaselineMethod='NonLinear', Resource=resource,
+                         Standardised=False, BarkThickness=1.0)
+    corr = r.drill.astype(float)[:len(r.recompute_corr_trace())] - r.recompute_corr_trace()
+    assert corr[10] == pytest.approx(-offset)

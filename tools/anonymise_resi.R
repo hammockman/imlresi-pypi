@@ -163,7 +163,10 @@ subset_list <- function(l, name) {
       how <- paste0(how, sprintf(" (original had %d trailing extra element(s), dropped)", length(l) - n))
     }
   } else {
-    stop(sprintf("%s: unnamed list shorter (%d) than df (%d); cannot subset safely", name, length(l), n))
+    # rows can't be matched to elements: keep none rather than guess
+    out <- list()
+    how <- sprintf("unnamed list shorter (%d) than df (%d); rows can't be matched, emptied", length(l), n)
+    same <- TRUE
   }
   # restore any non-names attributes (e.g. class)
   for (a in setdiff(names(at), "names")) attr(out, a) <- at[[a]]

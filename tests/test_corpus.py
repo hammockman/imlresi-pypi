@@ -126,9 +126,10 @@ DEN_CASES = [c for c in RESI_READABLE if 'denTraces' in c['nonempty_elements']]
 def test_recomputed_density_matches_app(case):
     """recompute_den_trace() against the web app's own denTraces.
 
-    Measured on 280 Dropbox files: exact for app 4.2.1 and 4.3.0, within
-    0.3% for 4.2.4/4.5.1 (Linear baseline) and about 1.2% for the
-    NonLinear baseline (5.0.0). The bound guards against regressions.
+    Measured on 280 Dropbox files: exact for app 4.2.1 and 4.3.0 and for
+    the NonLinear baseline of app 5.0.0 (all 57 traces with app densities),
+    within 0.3% for 4.2.4/4.5.1 (Linear baseline). The bound guards
+    against regressions.
     """
     raw = read_raw(CORPUS / case['path'])
     names = [str(n) for n in raw['df']['FileName']]
@@ -145,3 +146,14 @@ def test_recomputed_density_matches_app(case):
         assert rel < 0.005, f'{r.FileName}: relative MAE {rel:.4f}'
         checked += 1
     assert checked
+
+
+def test_nonlinear_density_is_exact():
+    """App 5.0.0 used FQResi's void-volume NonLinear baseline (C14)."""
+    case = next(c for c in DEN_CASES if c['id'] == 'C14')
+    raw = read_raw(CORPUS / case['path'])
+    results = list(load_set(case))
+    assert {r.get_descriptor('BaselineMethod') for r in results} == {'NonLinear'}
+    for r in results:
+        stored = np.ravel(np.asarray(raw['denTraces'][r.FileName], dtype=float))
+        np.testing.assert_allclose(r.recompute_den_trace(), stored, atol=1e-6)

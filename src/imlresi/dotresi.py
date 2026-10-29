@@ -430,6 +430,31 @@ def nonlinear_baseline_correction(a_mm, k, b, d, f):
     curve_y = np.where(x_vals <= a, sigmoid_y, linear_y)
     return curve_y - b
 
+def void_volume_baseline_correction(c_trace, BLCorrDen, threshold):
+    """
+    The NonLinear baseline correction FQResi used before January 2026: the
+    cumulative void volume around the needle (a 12 mm blade tapering from 3.1
+    to 1.5 mm, then a 1.5 mm shaft), from the first sample above `threshold`,
+    scaled to reach BLCorrDen at the end of the trace.
+    """
+    obdia = len(c_trace)
+    above = np.flatnonzero(c_trace > threshold)
+    if len(above) == 0:
+        return np.zeros(obdia)
+    a = int(above[0]) + 1  # R: min(which(cTrace > x)); the correction starts after it
+    n = obdia - a
+    blade = (np.arange(1, 121) * (3.1 - 1.5) / 120 + 1.5)[::-1]
+    needle = np.concatenate([blade, np.full(max(0, n - 120), 1.5)])[:n]
+    depth = np.arange(1, n + 1)
+    hole = depth * np.pi * (3.1 / 2) ** 2
+    drill = np.cumsum(np.pi * (needle / 2) ** 2)
+    shaft = depth * np.pi * (1.5 / 2) ** 2
+    void_ratio = np.concatenate([np.zeros(a), (hole - drill) / (hole - shaft)])
+    void_sum = np.cumsum(void_ratio)[:obdia]
+    if void_sum.max() <= 0:
+        return np.zeros(obdia)
+    return void_sum / void_sum.max() * BLCorrDen
+
 def area_weight_radius(anarray):
     """
     Computes the area weighted Pith-to-Bark trace.
@@ -549,8 +574,24 @@ class ResiResult:
     def _version_major(self):
         """Major number of the app Version ('Version 5.6.0' -> 5), 0 if unknown.
         FQResi switches standardisation method at 5."""
-        m = re.search(r'(\d+)', self._text('Version', ''))
-        return int(m.group(1)) if m else 0
+        return self._app_version()[0]
+
+    def _app_version(self):
+        """App Version as a tuple ('Version 5.1.0' -> (5, 1, 0)), (0,) if unknown."""
+        m = re.search(r'(\d+(?:\.\d+)*)', self._text('Version', ''))
+        return tuple(int(p) for p in m.group(1).split('.')) if m else (0,)
+
+    def _nonlinear_method(self):
+        """Which NonLinear baseline correction the app version used, from
+        FQResi's history: the void-volume curve starting above rIntcpt/rSlope
+        until Dec 2024 (app 5.0, 5.1; checked against 5.0.0 files), starting
+        above 1 until Jan 2026 (5.2-5.4, 4.5.4-4.5.x), then the sigmoid."""
+        v = self._app_version()
+        if (5, 0) <= v[:2] < (5, 2):
+            return 'void-intercept'
+        if (5, 2) <= v[:2] < (5, 5) or (4, 5, 4) <= v[:3] < (4, 6):
+            return 'void'
+        return 'sigmoid'
 
     def _trace_standardise(self, tr, RPMCoef=None):
         """
@@ -639,6 +680,12 @@ class ResiResult:
         elif baseline_method == "Linear":
             bCorr = np.arange(1, obdia + 1) / obdia * BLCorrDen
             return std_trace[:obdia] - bCorr
+        elif baseline_method == "NonLinear" and self._nonlinear_method() != 'sigmoid':
+            threshold = 1.0
+            if self._nonlinear_method() == 'void-intercept':
+                threshold = self._num('rIntcpt', 0.0) / (self._num('rSlope', 1.0) or 1.0)
+            c_trace = std_trace[:obdia]
+            return c_trace - void_volume_baseline_correction(c_trace, BLCorrDen, threshold)
         elif baseline_method == "NonLinear":
             bark_thickness = self._num('BarkThickness', 0.0)
             d = obdia - int(bark_thickness * 10)
@@ -650,7 +697,9 @@ class ResiResult:
                 b_offset = 2.0
             elif resource == "HoopPine":
                 b_offset = 1.5
-            elif resource in ("Enitens", "Eglobulus", "Eucalypt", "MediumDensityHardwood"):
+            elif resource == "Eglobulus":
+                b_offset = 7.5
+            elif resource in ("Enitens", "Eucalypt", "MediumDensityHardwood"):
                 b_offset = 6.0
             else:
                 b_offset = 2.0

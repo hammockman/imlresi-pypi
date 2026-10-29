@@ -293,6 +293,20 @@ def clean_timestamp(val, slashed_order='MDY'):
     except Exception:
         return None
 
+# results table columns after (id, TraceID), in insert order
+DUCKDB_RESULT_COLUMNS = [
+    'ResiFile', 'TraceType', 'TreeClass', 'DOB', 'UBDIA', 'BarkThickness', 'ExitBarkThickness',
+    'DiscArea', 'PrAWV', 'PrMOE', 'OWDensity', 'CoreDensity', 'DiscDensity', 'EntryRadius', 'EntryDensity',
+    'ExitRadius', 'ExitDensity', 'Decay', 'RingCount', 'BLCorrDen', 'rSlope', 'rIntcpt', 'RPMCoef', 'Resource',
+    'BaselineMethod', 'Standardised', 'RingMethod', 'WebSite', 'RemoteSha', 'rPos', 'EqnType', 'Version',
+]
+# a result already stored for the same trace with all of these equal is a duplicate
+DUCKDB_PROCESSING_COLUMNS = [
+    'TraceType', 'TreeClass', 'DOB', 'UBDIA', 'BarkThickness', 'ExitBarkThickness', 'EntryRadius',
+    'ExitRadius', 'BLCorrDen', 'rSlope', 'rIntcpt', 'RPMCoef', 'Resource', 'BaselineMethod',
+    'Standardised', 'RingMethod', 'EqnType', 'Version',
+]
+
 DUCKDB_PREFIX_RE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 
 
@@ -446,23 +460,46 @@ class ResiResult:
                     return v
         return default
 
+    def _num(self, name, default):
+        """A numeric descriptor, or default when missing, NA or not a number."""
+        v = clean_float(self.get_descriptor(name))
+        return default if v is None else v
+
+    def _text(self, name, default):
+        """A text descriptor, or default when missing or NA."""
+        v = self.get_descriptor(name)
+        if v is None or (not isinstance(v, str) and pd.isna(v)):
+            return default
+        return str(v)
+
+    def _is_standardised(self):
+        v = self.get_descriptor('Standardised')
+        if v is None or (not isinstance(v, str) and pd.isna(v)):
+            return True
+        if isinstance(v, str):
+            return v.strip().upper() not in ("FALSE", "F", "0")
+        return bool(v)
+
+    def _version_major(self):
+        """Major number of the app Version ('Version 5.6.0' -> 5), 0 if unknown.
+        FQResi switches standardisation method at 5."""
+        m = re.search(r'(\d+)', self._text('Version', ''))
+        return int(m.group(1)) if m else 0
+
     def _trace_standardise(self, tr, RPMCoef=None):
         """
         Standardizes raw drill trace torque values to constant sampling conditions (firmware < 5).
         """
-        standardised_flag = self.descriptors.get('Standardised', True)
-        if standardised_flag in ("FALSE", "F", False):
-            return tr.copy()
-        if self.descriptors.get('ResiCode') == "RinnTech":
+        if not self._is_standardised() or self._text('ResiCode', '') == "RinnTech":
             return tr.copy()
 
-        feed_speed = float(self.descriptors.get('FeedSpeed', 2000.0) or 2000.0)
-        rpm = float(self.descriptors.get('RPM', 2500.0) or 2500.0)
+        feed_speed = self._num('FeedSpeed', 2000.0) or 2000.0
+        rpm = self._num('RPM', 2500.0) or 2500.0
 
         FRcoef = (feed_speed * 0.00032624) + 0.34495
         x = 2500.0 / rpm
 
-        a, b = get_rpm_coef_params(self.descriptors.get('RPMCoef') if RPMCoef is None else RPMCoef)
+        a, b = get_rpm_coef_params(self.get_descriptor('RPMCoef') if RPMCoef is None else RPMCoef)
         RPMcoef = a * np.log(x) + b
 
         stCoef = FRcoef / RPMcoef
@@ -472,18 +509,15 @@ class ResiResult:
         """
         Standardizes raw drill trace torque values using firmware 5+ chip size equations.
         """
-        standardised_flag = self.descriptors.get('Standardised', True)
-        if standardised_flag in ("FALSE", "F", False):
-            return tr.copy()
-        if self.descriptors.get('ResiCode') == "RinnTech":
+        if not self._is_standardised() or self._text('ResiCode', '') == "RinnTech":
             return tr.copy()
 
-        feed_speed = float(self.descriptors.get('FeedSpeed', 2000.0) or 2000.0)
-        rpm = float(self.descriptors.get('RPM', 2500.0) or 2500.0)
+        feed_speed = self._num('FeedSpeed', 2000.0) or 2000.0
+        rpm = self._num('RPM', 2500.0) or 2500.0
         cs = feed_speed / (2.0 * rpm)
         cs_std = 0.4
 
-        resource = self.descriptors.get('Resource', 'Other')
+        resource = self._text('Resource', 'Other')
 
         # Softwood vs Hardwood coefficients
         if resource in ("HoopPine", "MediumDensitySoftwood"):
@@ -517,30 +551,22 @@ class ResiResult:
 
         tr = self.drill.astype(float)
 
-        # Check firmware version format to select standardization function
-        version = self.descriptors.get('Version', '')
-        version_num = 0
-        if version and len(version) >= 9:
-            try:
-                version_num = int(version[8])
-            except ValueError:
-                pass
-
-        if version_num >= 5:
+        # FQResi changed standardisation method at app version 5
+        if self._version_major() >= 5:
             std_trace = self._trace_standardise_v5(tr)
         else:
             std_trace = self._trace_standardise(tr, RPMCoef)
 
-        dob = self.descriptors.get('DOB', 0) or 0
+        dob = self._num('DOB', 0.0)
         obdia = int(min(len(std_trace) - 15, dob * 10))
         if obdia <= 0:
             obdia = len(std_trace)
 
-        baseline_method = self.descriptors.get('BaselineMethod', 'Linear')
-        if self.TraceType == "CAL":
+        baseline_method = self._text('BaselineMethod', 'Linear')
+        if self._text('TraceType', '') == "CAL":
             baseline_method = "None"
 
-        BLCorrDen = float(self.descriptors.get('BLCorrDen', 0.0) or 0.0)
+        BLCorrDen = self._num('BLCorrDen', 0.0)
 
         if baseline_method == "None":
             return std_trace[:obdia]
@@ -548,12 +574,12 @@ class ResiResult:
             bCorr = np.arange(1, obdia + 1) / obdia * BLCorrDen
             return std_trace[:obdia] - bCorr
         elif baseline_method == "NonLinear":
-            bark_thickness = float(self.descriptors.get('BarkThickness', 0.0) or 0.0)
+            bark_thickness = self._num('BarkThickness', 0.0)
             d = obdia - int(bark_thickness * 10)
             if d <= 0:
                 d = obdia
 
-            resource = self.descriptors.get('Resource', 'Other')
+            resource = self._text('Resource', 'Other')
             if resource in ("RadiataPine", "SouthernPine", "MediumDensitySoftwood"):
                 b_offset = 2.0
             elif resource == "HoopPine":
@@ -588,21 +614,21 @@ class ResiResult:
         if c_trace is None:
             return None
 
-        eqn_type = self.descriptors.get('EqnType', 'Linear')
-        r_slope = float(self.descriptors.get('rSlope', 1.0) or 1.0)
-        r_intcpt = float(self.descriptors.get('rIntcpt', 0.0) or 0.0)
+        eqn_type = self._text('EqnType', 'Linear')
+        r_slope = self._num('rSlope', 1.0)
+        r_intcpt = self._num('rIntcpt', 0.0)
 
         if eqn_type == "Linear":
             return c_trace * r_slope + r_intcpt
         elif eqn_type == "Ln":
-            bark_thickness = float(self.descriptors.get('BarkThickness', 0.0) or 0.0)
+            bark_thickness = self._num('BarkThickness', 0.0)
             s = int(max(1, bark_thickness * 10))
 
-            if self.TraceType == "P-B":
-                entry_radius = float(self.descriptors.get('EntryRadius', 0.0) or 0.0)
+            if self._text('TraceType', '') == "P-B":
+                entry_radius = self._num('EntryRadius', 0.0)
                 f = int(entry_radius * 10)
             else:
-                ubdia = float(self.descriptors.get('UBDIA', 0.0) or 0.0)
+                ubdia = self._num('UBDIA', 0.0)
                 f = int(ubdia * 10 + s)
 
             if f <= s or f > len(c_trace):
@@ -626,8 +652,8 @@ class ResiResult:
         if den_trace is None:
             return None
 
-        bark_thickness = float(self.descriptors.get('BarkThickness', 0.0) or 0.0)
-        entry_radius = float(self.descriptors.get('EntryRadius', 0.0) or 0.0)
+        bark_thickness = self._num('BarkThickness', 0.0)
+        entry_radius = self._num('EntryRadius', 0.0)
         s = int(bark_thickness * 10)
         f = int(entry_radius * 10)
 
@@ -1032,9 +1058,14 @@ class ResiResultSet:
                 RingMethod VARCHAR,
                 WebSite VARCHAR,
                 RemoteSha VARCHAR,
-                rPos DOUBLE[]
+                rPos DOUBLE[],
+                EqnType VARCHAR,
+                Version VARCHAR
             );
         """)
+        # databases written by earlier versions lack these columns
+        for col in ('EqnType', 'Version'):
+            conn.execute(f"ALTER TABLE {t_results} ADD COLUMN IF NOT EXISTS {col} VARCHAR")
         conn.execute(f"""
             CREATE TABLE IF NOT EXISTS {t_rings} (
                 ResultID INTEGER,
@@ -1058,6 +1089,21 @@ class ResiResultSet:
             );
         """)
 
+        # allocate ids, look up duplicates and insert in one transaction
+        conn.execute("BEGIN TRANSACTION;")
+        try:
+            self._write_duckdb_rows(conn, t_traces, t_results, t_rings, t_boards)
+        except Exception:
+            conn.execute("ROLLBACK;")
+            if close_conn:
+                conn.close()
+            raise
+        conn.execute("COMMIT;")
+
+        if close_conn:
+            conn.close()
+
+    def _write_duckdb_rows(self, conn, t_traces, t_results, t_rings, t_boards):
         seq_trace = conn.execute(f"SELECT COALESCE(MAX(id), 0) + 1 FROM {t_traces}").fetchone()[0]
         seq_result = conn.execute(f"SELECT COALESCE(MAX(id), 0) + 1 FROM {t_results}").fetchone()[0]
 
@@ -1071,28 +1117,22 @@ class ResiResultSet:
         rings_insert = []
         boards_insert = []
 
+        dup_where = " AND ".join(f"{c} IS NOT DISTINCT FROM ?" for c in DUCKDB_PROCESSING_COLUMNS)
+        dup_idx = [2 + DUCKDB_RESULT_COLUMNS.index(c) for c in DUCKDB_PROCESSING_COLUMNS]
+
         for r in self.results:
             thash = r.TraceHash
             if thash in existing_hashes:
                 trace_id = existing_hashes[thash]
-                descriptors = r.descriptors
-                baseline_method = descriptors.get('BaselineMethod', 'Linear')
-                ring_method = descriptors.get('RingMethod', 'Annual')
-                r_slope = float(descriptors.get('rSlope', 1.0) or 1.0)
-                r_intcpt = float(descriptors.get('rIntcpt', 0.0) or 0.0)
-                dob = float(descriptors.get('DOB', 0.0) or 0.0)
-                ubdia = float(descriptors.get('UBDIA', 0.0) or 0.0)
-
-                identical_result = conn.execute(f"""
-                    SELECT id FROM {t_results}
-                    WHERE TraceID = ?
-                      AND ABS(COALESCE(rSlope, 0) - ?) < 1e-4
-                      AND ABS(COALESCE(rIntcpt, 0) - ?) < 1e-4
-                      AND ABS(COALESCE(DOB, 0) - ?) < 1e-4
-                      AND ABS(COALESCE(UBDIA, 0) - ?) < 1e-4
-                      AND COALESCE(BaselineMethod, '') = ?
-                      AND COALESCE(RingMethod, '') = ?
-                """, (trace_id, r_slope, r_intcpt, dob, ubdia, str(baseline_method), str(ring_method))).fetchone()
+                # build the row it would get, and skip it if an identical
+                # processing run is already stored for this trace
+                cand_results, cand_rings, cand_boards = [], [], []
+                self._accumulate_result_records(None, trace_id, r, cand_results, cand_rings, cand_boards)
+                row = cand_results[0]
+                pending = [x for x in results_insert if x[1] == trace_id and all(x[i] == row[i] for i in dup_idx)]
+                identical_result = pending[0][:1] if pending else conn.execute(
+                    f"SELECT id FROM {t_results} WHERE TraceID = ? AND {dup_where}",
+                    [trace_id] + [row[i] for i in dup_idx]).fetchone()
 
                 if identical_result:
                     warnings.warn(
@@ -1100,10 +1140,9 @@ class ResiResultSet:
                         f"with matching parameters already exists in database (TraceID: {trace_id}, ResultID: {identical_result[0]})."
                     )
                     continue
-                else:
-                    result_id = seq_result
-                    seq_result += 1
-                    self._accumulate_result_records(result_id, trace_id, r, results_insert, rings_insert, boards_insert)
+                result_id = seq_result
+                seq_result += 1
+                self._accumulate_result_records(result_id, trace_id, r, results_insert, rings_insert, boards_insert)
             else:
                 trace_id = seq_trace
                 seq_trace += 1
@@ -1121,20 +1160,8 @@ class ResiResultSet:
 
                 self._accumulate_result_records(result_id, trace_id, r, results_insert, rings_insert, boards_insert)
 
-        # Batch execute parameter lists inside a single transaction
-        conn.execute("BEGIN TRANSACTION;")
-        try:
-            self._insert_duckdb_rows(conn, t_traces, t_results, t_rings, t_boards,
-                                     traces_insert, results_insert, rings_insert, boards_insert)
-        except Exception:
-            conn.execute("ROLLBACK;")
-            if close_conn:
-                conn.close()
-            raise
-        conn.execute("COMMIT;")
-
-        if close_conn:
-            conn.close()
+        self._insert_duckdb_rows(conn, t_traces, t_results, t_rings, t_boards,
+                                 traces_insert, results_insert, rings_insert, boards_insert)
 
     @staticmethod
     def _insert_duckdb_rows(conn, t_traces, t_results, t_rings, t_boards,
@@ -1150,11 +1177,8 @@ class ResiResultSet:
         if results_insert:
             conn.executemany(f"""
                 INSERT INTO {t_results} (
-                    id, TraceID, ResiFile, TraceType, TreeClass, DOB, UBDIA, BarkThickness, ExitBarkThickness,
-                    DiscArea, PrAWV, PrMOE, OWDensity, CoreDensity, DiscDensity, EntryRadius, EntryDensity,
-                    ExitRadius, ExitDensity, Decay, RingCount, BLCorrDen, rSlope, rIntcpt, RPMCoef, Resource,
-                    BaselineMethod, Standardised, RingMethod, WebSite, RemoteSha, rPos
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    id, TraceID, {', '.join(DUCKDB_RESULT_COLUMNS)}
+                ) VALUES ({', '.join(['?'] * (2 + len(DUCKDB_RESULT_COLUMNS)))});
             """, results_insert)
 
         if rings_insert:
@@ -1177,21 +1201,17 @@ class ResiResultSet:
         Helper method to prepare parameter tuples for batch insert into results, rings, and boards tables.
         """
         desc = r.descriptors
-        std_flag = desc.get('Standardised', True)
-        if isinstance(std_flag, str):
-            std_flag = std_flag.upper() not in ("FALSE", "F")
+        std_flag = r._is_standardised()
 
-        rpm_coef_val = desc.get('RPMCoef')
-        if rpm_coef_val is not None:
-            if isinstance(rpm_coef_val, (int, float)):
-                rpm_coef_flt = float(rpm_coef_val)
-            else:
-                a_coef, _ = get_rpm_coef_params(rpm_coef_val)
-                rpm_coef_flt = a_coef
+        rpm_coef_val = r.get_descriptor('RPMCoef')
+        if isinstance(rpm_coef_val, (int, float)) or rpm_coef_val is None:
+            rpm_coef_flt = clean_float(rpm_coef_val)  # missing stays missing
         else:
-            rpm_coef_flt = -0.8
+            a_coef, _ = get_rpm_coef_params(rpm_coef_val)
+            rpm_coef_flt = a_coef
 
-        resi_file_val = r.FileName or r.get_descriptor('ResiFile') or r.ResiFile
+        # the .Resi file the result came from (not the trace's file name)
+        resi_file_val = r.ResiFile or r._text('ResiFile', None)
 
         results_insert.append((
             result_id, trace_id, resi_file_val, r.get_descriptor('TraceType'), r.get_descriptor('TreeClass'), r.get_descriptor('DOB'), r.get_descriptor('UBDIA'), r.get_descriptor('BarkThickness'),
@@ -1199,7 +1219,8 @@ class ResiResultSet:
             r.get_descriptor('EntryRadius'), r.get_descriptor('EntryDensity'), r.get_descriptor('ExitRadius'), r.get_descriptor('ExitDensity'), r.get_descriptor('Decay'), r.get_descriptor('RingCount'), r.get_descriptor('BLCorrDen'),
             r.get_descriptor('rSlope'), r.get_descriptor('rIntcpt'), rpm_coef_flt, r.get_descriptor('Resource'), r.get_descriptor('BaselineMethod'), bool(std_flag),
             r.get_descriptor('RingMethod'), r.get_descriptor('WebSite'), r.get_descriptor('RemoteSha'),
-            r.rPos if r.rPos is not None else None
+            r.rPos if r.rPos is not None else None,
+            r._text('EqnType', None), r._text('Version', None),
         ))
 
         # Rings insert accumulation
@@ -1216,7 +1237,7 @@ class ResiResultSet:
         for idx, board in enumerate(r.board_moe):
             mean_moe = board.get('MeanMOE', board.get('BoardMOE'))
             boards_insert.append((
-                result_id, idx + 1, mean_moe, board.get('RadialPositionPct', 0.0)
+                result_id, idx + 1, mean_moe, board.get('RadialPositionPct')
             ))
 
     @classmethod

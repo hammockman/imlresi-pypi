@@ -278,7 +278,9 @@ def test_new_trace_accessors():
     
     bark = tr.get_bark_thickness()
     assert bark.entry == 2.0
-    assert bark.exit == 4.0 # DOB (10) - UBDIA (6)
+    assert bark.exit == 2.0 # DOB (10) - UBDIA (6) - entry bark (2)
+    assert bark.entry + tr.get_result('UBDIA') + bark.exit == tr.get_dob()
+    assert cambial.exit + bark.exit == tr.get_dob()
 
     # Mock _res API dictionary for a P-B trace
     tr._res = {
@@ -300,6 +302,20 @@ def test_new_trace_accessors():
     bark_pb = tr.get_bark_thickness()
     assert bark_pb.entry == 3.0
     assert bark_pb.exit is None
+
+    # the API's own ExitBarkThickness wins when present
+    tr._res = {'TraceType': 'B-B', 'DOB': 10.0, 'BarkThickness': 2.0, 'UBDIA': 6.0, 'ExitBarkThickness': 1.7}
+    assert tr.get_bark_thickness().exit == 1.7
+
+    # rounded to 0.1 and never negative, as in FQResi
+    tr._res = {'TraceType': 'B-B', 'DOB': 10.0, 'BarkThickness': 2.04, 'UBDIA': 6.0}
+    assert tr.get_bark_thickness().exit == 2.0
+    tr._res = {'TraceType': 'B-B', 'DOB': 10.0, 'BarkThickness': 3.0, 'UBDIA': 8.0}
+    assert tr.get_bark_thickness().exit == 0
+
+    # B-B with only DBHOB: exit bark uses the DBHOB fallback
+    tr._res = {'TraceType': 'B-B', 'DBHOB': 12.0, 'BarkThickness': 1.5, 'UBDIA': 9.0}
+    assert tr.get_bark_thickness().exit == pytest.approx(1.5)
 
     # Test failure case when neither DOB nor DBHOB is available
     tr._res = {'TraceType': 'B-B'}

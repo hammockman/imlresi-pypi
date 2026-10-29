@@ -983,10 +983,15 @@ class Trace():
         return self.get_result('EntryRadius')
 
     def get_bark_thickness(self):
-        return namedtuple('BarkThickness', ['entry', 'exit'])(
-            self.get_result('BarkThickness'),
-            None if self.get_tracetype() == 'P-B' else self.get_result('DOB') - self.get_result('UBDIA')
-        )
+        entry = self.get_result('BarkThickness')
+        if self.get_tracetype() == 'P-B':
+            exit_ = None
+        elif self._res.get('ExitBarkThickness') is not None:
+            exit_ = self._res['ExitBarkThickness']
+        else:
+            # as FQResi computes it: DOB spans entry bark + UBDIA + exit bark
+            exit_ = max(0, round(self.get_dob() - (entry + self.get_result('UBDIA')), 1))
+        return namedtuple('BarkThickness', ['entry', 'exit'])(entry, exit_)
 
     def get_wood_only(self):
         # fit a line to the trace

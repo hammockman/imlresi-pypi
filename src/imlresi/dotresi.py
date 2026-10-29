@@ -775,17 +775,17 @@ class ResiResultSet:
                 if sample_date_key != 'SampleDate':
                     descriptors.pop(sample_date_key, None)
 
-            dob_val = None
-            dob_key = None
-            for k in list(descriptors.keys()):
-                if k.lower() in ('dob', 'dbhob'):
-                    dob_val = descriptors[k]
-                    dob_key = k
-                    break
-            if dob_key is not None:
-                descriptors['DOB'] = clean_float(dob_val)
-                if dob_key != 'DOB':
-                    descriptors.pop(dob_key, None)
+            # Real files carry both DBHOB (often all NA) and DOB: keep both,
+            # and only fall back to DBHOB for DOB when DOB is missing
+            dob_keys = {k.lower(): k for k in descriptors if k.lower() in ('dob', 'dbhob')}
+            dob_val = clean_float(descriptors[dob_keys['dob']]) if 'dob' in dob_keys else None
+            dbhob_val = clean_float(descriptors[dob_keys['dbhob']]) if 'dbhob' in dob_keys else None
+            for k in dob_keys.values():
+                descriptors.pop(k)
+            if 'dbhob' in dob_keys:
+                descriptors['DBHOB'] = dbhob_val
+            if dob_keys:
+                descriptors['DOB'] = dob_val if dob_val is not None else dbhob_val
 
             # Clean/coerce numeric columns case-insensitively
             for col in num_cols:

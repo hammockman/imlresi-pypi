@@ -397,7 +397,7 @@ class ResiResult:
         if self.descriptors.get('ResiCode') == "RinnTech":
             return tr.copy()
 
-        feed_speed = float(self.descriptors.get('FeedSpeed', 200.0) or 200.0)
+        feed_speed = float(self.descriptors.get('FeedSpeed', 2000.0) or 2000.0)
         rpm = float(self.descriptors.get('RPM', 2500.0) or 2500.0)
 
         FRcoef = (feed_speed * 0.00032624) + 0.34495
@@ -419,7 +419,7 @@ class ResiResult:
         if self.descriptors.get('ResiCode') == "RinnTech":
             return tr.copy()
 
-        feed_speed = float(self.descriptors.get('FeedSpeed', 200.0) or 200.0)
+        feed_speed = float(self.descriptors.get('FeedSpeed', 2000.0) or 2000.0)
         rpm = float(self.descriptors.get('RPM', 2500.0) or 2500.0)
         cs = feed_speed / (2.0 * rpm)
         cs_std = 0.4
@@ -2023,7 +2023,7 @@ def save_traces_to_dotresi(traces, filepath, append=True, resi_code=None, format
         if not trace_resi_code:
             trace_resi_code = "PD400-0000"
 
-        feed_speed = float(trace.get_feedspeed())
+        feed_speed = float(trace.get_feedspeed()) * 10  # the trace's cm/min; .Resi files and FQResi use mm/min
         rpm = float(trace.get_rpm())
 
         sample_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

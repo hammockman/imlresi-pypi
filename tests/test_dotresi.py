@@ -172,7 +172,7 @@ def test_save_traces_to_resi():
         assert rs[0].FileName == "mock_trace_1.rgp"
         assert rs[0].TreeID == "Tree-A"
         assert rs[0].ResiCode == "PD500-1023"
-        assert float(rs[0].FeedSpeed) == 400.0
+        assert float(rs[0].FeedSpeed) == 4000.0  # the trace's 400 cm/min, in mm/min
         assert float(rs[0].RPM) == 2200.0
         assert np.array_equal(rs[0].drill, np.array([10.0, 20.0, 30.0, 15.0]))
 

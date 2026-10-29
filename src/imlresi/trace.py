@@ -602,6 +602,7 @@ class Trace():
             self.feed = []
             self.raw = None
         self._res = None  # placeholder for raw API results
+        self._inp = None
         self.trace_filename = None
 
 
@@ -926,18 +927,23 @@ class Trace():
             return self._res[key]
 
     def __getattr__(self, name):
+        # Only called for attributes that don't exist. Private and dunder
+        # names must fail normally, or copy/pickle (which probe for
+        # __setstate__ etc. before __init__ has run) recurse forever.
+        if name.startswith("_"):
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
         # --- Support trace.get_ubdia() ---
         if name.startswith("get_"):
             key_name = name[4:]
-
-            def getter():
-                if self._res is not None:
-                    for actual_key in self._res.keys():
-                        if actual_key.lower() == key_name.lower():
-                            return self.get_result(actual_key)
-                return self.get_result(key_name.upper())
-
-            return getter
+            if self._res is None:
+                # not processed yet: any result could exist later
+                return lambda: self.get_result(key_name.upper())
+            for actual_key in self._res.keys():
+                if actual_key.lower() == key_name.lower():
+                    return lambda: self.get_result(actual_key)
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}' "
+                                 f"and the API result has no '{key_name}'")
 
         # --- Support trace.ubdia ---
         if self._res is not None:

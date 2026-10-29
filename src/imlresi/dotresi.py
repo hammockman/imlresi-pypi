@@ -372,6 +372,10 @@ class ResiResult:
         """
         Fallback accessor for descriptor keys, providing case-insensitive lookup.
         """
+        # private/dunder names and descriptors itself must fail normally, or
+        # copy/pickle (which run before __init__) recurse forever
+        if name.startswith('_') or name == 'descriptors':
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
         # Exact match check
         if name in self.descriptors:
             return self.descriptors[name]

@@ -43,9 +43,25 @@ Homepage = "https://github.com/hammockman/imlresi-pypi"
 "Issue Tracker" = "https://github.com/hammockman/imlresi-pypi/issues"
 
 [project.optional-dependencies]
+# Delta Lake export with the pure-Python delta-rs engine
+delta = [
+    "deltalake",
+    "pyarrow",
+]
+# Delta Lake export through PySpark (e.g. Microsoft Fabric notebooks)
+spark = [
+    "pyspark",
+    "delta-spark",
+]
+# Trace.plot()
+plot = [
+    "matplotlib",
+]
 test = [
     "pytest",
-    "jsondiff"
+    "jsondiff",
+    "deltalake",
+    "pyarrow",
 ]
 
 [tool.setuptools]
@@ -55,4 +71,4 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.pytest.ini_options]
-addopts = "--ignore=test_all_dotresi.py"
+testpaths = ["tests"]

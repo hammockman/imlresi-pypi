@@ -10,6 +10,9 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
+import pytest
+
+deltalake = pytest.importorskip('deltalake')
 from deltalake import DeltaTable
 
 from imlresi.dotresi import ResiResult, ResiResultSet, DeltaMergeResult

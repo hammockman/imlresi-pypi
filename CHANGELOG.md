@@ -37,6 +37,11 @@
   as a compact R sequence (`1:2e9`, stored as just its ends). Data beyond
   `imlresi.dotresi.MAX_RESI_BYTES` (1 GiB once decompressed; real files
   reach ~160 MB) now raises `ValueError`.
+- `Trace.get_tilt()` raised `KeyError` for binary `.rgp` and PD-Tools text
+  traces, which record no tilt; it returns None, as it already did when
+  tilt was off. `get_bark_thickness()`, `get_cambial_boundaries()` and
+  `get_wood_only()` failed with `TypeError`/`AttributeError` before API
+  processing; like the other result getters, they now warn and return None.
 
 ### Changed
 

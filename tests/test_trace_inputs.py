@@ -113,3 +113,25 @@ def test_warnings_go_through_standard_logging(caplog):
         assert Trace().get_ubdia() is None
     assert any(r.name == 'imlresi.trace' and 'Processing required' in r.getMessage()
                for r in caplog.records)
+
+
+CORPUS_TRACES = Path(__file__).parent / 'data' / 'corpus' / 'traces'
+
+
+@pytest.mark.parametrize('name, tilt', [('T001.rgp', None), ('T033.txt', None),   # no tilt recorded
+                                        ('T032.pdc', 90.0), ('T035.rgp', 52.7)])
+def test_get_tilt(name, tilt):
+    t = Trace()
+    t.read(CORPUS_TRACES / name)
+    assert t.get_tilt() == tilt
+
+
+@pytest.mark.parametrize('getter', ['get_bark_thickness', 'get_cambial_boundaries', 'get_wood_only'])
+def test_result_getters_before_processing(getter, caplog):
+    # like plain results (get_ubdia() etc.): None and a warning, not a TypeError
+    import logging
+    t = Trace()
+    t.read(CORPUS_TRACES / 'T020.rgp')
+    with caplog.at_level(logging.WARNING, logger='imlresi'):
+        assert getattr(t, getter)() is None
+    assert any('Processing required' in r.getMessage() for r in caplog.records)

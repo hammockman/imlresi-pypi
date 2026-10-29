@@ -761,7 +761,9 @@ class Trace():
         return datetime.strptime(self.header['date'] + 'T' + self.header['time'], '%d.%m.%YT%H:%M:%S')
 
     def get_tilt(self):
-        if not self.settings['tiltOn']: return None
+        # binary and PD-Tools text traces record no tilt
+        if not self.settings.get('tiltOn') or self.settings.get('tiltAngle') is None:
+            return None
         return float(self.settings['tiltAngle'])
         # possibly tiltAngle is always reported as an int, but
         # it's really a continuous variableso make it a float
@@ -997,6 +999,9 @@ class Trace():
                 raise KeyError("Neither DOB or DBHOB are available")
 
     def get_cambial_boundaries(self):
+        if self._res is None:
+            logger.warning("Processing required before cambial boundaries are available")
+            return None
         return namedtuple('CambialBoundaries', ['entry', 'exit'])(
             self.get_result('BarkThickness'),
             None if self.get_tracetype() == 'P-B' else self.get_result('BarkThickness') + self.get_result('UBDIA')
@@ -1006,6 +1011,9 @@ class Trace():
         return self.get_result('EntryRadius')
 
     def get_bark_thickness(self):
+        if self._res is None:
+            logger.warning("Processing required before bark thickness is available")
+            return None
         entry = self.get_result('BarkThickness')
         if self.get_tracetype() == 'P-B':
             exit_ = None
@@ -1019,6 +1027,8 @@ class Trace():
     def get_wood_only(self):
         # fit a line to the trace
         xc = self.get_cambial_boundaries()
+        if xc is None:
+            return None
         if xc.exit is None: # P-B
             xp = self.get_pith()
             ii = np.where(np.logical_and(self.x >= xc.entry, self.x <= xp))[0]

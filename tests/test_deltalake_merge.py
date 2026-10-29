@@ -71,3 +71,15 @@ def test_merge_does_not_replace_non_delta_dir(tmp_path):
     except Exception:
         pass
     assert (path / 'keep.txt').read_text() == 'precious'
+
+
+@pytest.mark.parametrize('key', ['nope', 'FileName = source.FileName OR 1=1', ['FileName', 'nope'], []])
+def test_merge_key_must_be_a_column(seeded, key):
+    with pytest.raises(ValueError):
+        make_set('z').to_deltalake(seeded, mode='merge', merge_key=key)
+    assert file_names(seeded) == ['a', 'b', 'c']
+
+
+def test_compound_merge_key(seeded):
+    make_set('a', 'q', tree='T').to_deltalake(seeded, mode='merge', merge_key=['FileName', 'TreeID'])
+    assert file_names(seeded) == ['a', 'b', 'c', 'q']

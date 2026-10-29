@@ -592,13 +592,16 @@ def create_jdata(mapdict, meta, data):
         f = mapdict[k]
         if not f:
             continue
+        # keep the template default when the format lacks a setting (a
+        # missing key, as for feedOn/tiltOn in binary traces, or None, as for
+        # preselected_depth in txt exports): writing None instead of 0
+        # changes Trace.hash() for traces already stored under the old hash
         try:
-            rgp['header'][k] = f(meta)
+            v = f(meta)
         except KeyError:
-            # keep the template default: older formats lack some settings
-            # (feedOn, tiltOn, ...), and writing None instead of 0 changes
-            # Trace.hash() for traces already stored under the old hash
-            pass
+            continue
+        if v is not None:
+            rgp['header'][k] = v
 
     return rgp
 

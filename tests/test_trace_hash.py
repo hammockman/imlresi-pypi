@@ -12,12 +12,14 @@ from imlresi import Trace
 
 DATA = Path(__file__).parent / 'data'
 
+# txt pins changed once (0.0.46): depthPresel went back to the template's 0,
+# as before Feb 2026, instead of null.
 PINNED = {
     '1-131-withfeed-json.rgp': '6b46a40e7b8cee4dc1ebb18516241ca4',
     '1-131-withfeed-pdtools122.rgp': '288bc46edf7e80d1457cd7247adc871c',
     '1-131-withfeed-pdtools167.rgp': '6b46a40e7b8cee4dc1ebb18516241ca4',
-    '1-131-withfeed-txt1.txt': 'e64dd37d39977354aec269485fd865b5',
-    '1-131-withfeed-txt2.txt': 'e64dd37d39977354aec269485fd865b5',
+    '1-131-withfeed-txt1.txt': '562b5c5127d7cdbce03f75e951699f74',
+    '1-131-withfeed-txt2.txt': '562b5c5127d7cdbce03f75e951699f74',
     '1-131-withfeed.rgp': '288bc46edf7e80d1457cd7247adc871c',
     '2-178-withfeed.pdc': 'a07a37875ff4d4a8881b98d386a33be8',
     '3-131-nofeed.rgp': 'cbcc7eb33348d3a20ba89ac8e225b7aa',

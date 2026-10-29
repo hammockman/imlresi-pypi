@@ -1340,7 +1340,9 @@ class ResiResultSet:
         :param spark: Optional PySpark SparkSession instance. If None, automatically detects active PySpark session.
         :param lowercase_columns: If True, lowercases all column names and removes dots (e.g. TreeID->treeid, RPMCoef.a->rpmcoefa).
         :param column_mapping: Optional dict of source_col -> target_col mappings.
-        :return: Updated DeltaTable or PySpark DeltaTable instance.
+        :return: DeltaMergeResult(num_inserted, num_updated, metrics), or None
+            if the result set is empty. Merge counts come from the engine's
+            commit metrics; append and overwrite report every row as inserted.
         """
         if not self.results:
             logger.warning("ResiResultSet is empty; nothing to write to Delta Lake.")

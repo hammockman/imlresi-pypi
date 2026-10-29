@@ -38,6 +38,9 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
+[project.scripts]
+traces2resi = "imlresi.dotresi:main"
+
 [project.urls]
 Homepage = "https://github.com/hammockman/imlresi-pypi"
 "Issue Tracker" = "https://github.com/hammockman/imlresi-pypi/issues"

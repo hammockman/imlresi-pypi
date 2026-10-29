@@ -21,7 +21,6 @@ Todo:
   - underload
   - overload
   - etc
-- move to using pyproject.toml instead of setup.py
 - fix trace stability and tox test
 
 

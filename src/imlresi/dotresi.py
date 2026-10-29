@@ -213,43 +213,83 @@ def clean_array(arr):
             cleaned.append(clean_float(x))
         return np.array([x if x is not None else np.nan for x in cleaned], dtype=float)
 
-def clean_timestamp(val):
+SLASHED_DATE_RE = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$')
+
+
+def slashed_date_order(values):
+    """Field order ('MDY' or 'DMY') for the slashed SampleDates of one file.
+
+    FQResi writes month-first dates for JSON traces (e.g. 10/27/2020) but
+    day-first ones for binary .rgp traces, so the order is decided per file:
+    day-first only if some value can't be month-first.
     """
-    Parses dynamic date strings from .Resi files into Python datetime objects.
+    for v in values:
+        m = SLASHED_DATE_RE.match(str(v).strip())
+        if m and int(m.group(1)) > 12:
+            return 'DMY'
+    return 'MDY'
+
+
+def clean_timestamp(val, slashed_order='MDY'):
     """
-    if val is None or pd.isna(val):
+    Parses the SampleDate strings FQResi writes into naive datetimes
+    (instrument clock time), or None.
+
+    Handles '2026-06-07 09:13:54', '10/27/2020 11:06:14' (see
+    slashed_date_order), '02/03/2021 08:23', '18:41:40 28.07.2015',
+    '28.07.2015 18:41:40' and '2019-04-10 2019-04-10'. ISO strings are
+    never read day-first.
+    """
+    if val is None:
         return None
     # Unpack nested list or array values to get scalar timestamp
     while hasattr(val, '__len__') and not isinstance(val, (str, bytes, dict)):
         if len(val) == 0:
             return None
         val = val[0]
+    if val is None or (not isinstance(val, (str, bytes)) and pd.isna(val)):
+        return None
 
     if isinstance(val, (datetime, pd.Timestamp)):
-        return val.to_pydatetime() if hasattr(val, 'to_pydatetime') else val
+        dt = val.to_pydatetime() if hasattr(val, 'to_pydatetime') else val
+        return dt.replace(tzinfo=None)
     s_val = str(val).strip()
-    if s_val.lower() in ("not available", "na", "null", "none", "?", ""):
+    if s_val.lower() in ("not available", "na", "<na>", "nan", "null", "none", "?", ""):
         return None
-    # Try common formats
+
+    m = SLASHED_DATE_RE.match(s_val)
+    if m:
+        a, b, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        month, day = (a, b) if slashed_order == 'MDY' else (b, a)
+        hh, mm, ss = (int(x) if x else 0 for x in m.group(4, 5, 6))
+        try:
+            return datetime(year, month, day, hh, mm, ss)
+        except ValueError:
+            return None
+
     for fmt in (
         "%Y-%m-%d %H:%M:%S",
         "%Y-%m-%d %H:%M",
-        "%m/%d/%Y %H:%M:%S",
-        "%m/%d/%Y %H:%M",
-        "%d/%m/%Y %H:%M:%S",
-        "%d/%m/%Y %H:%M",
         "%Y/%m/%d %H:%M:%S",
-        "%Y/%m/%d %H:%M"
+        "%Y/%m/%d %H:%M",
+        "%H:%M:%S %d.%m.%Y",   # FQResi, PD-Tools 1.22 txt
+        "%d.%m.%Y %H:%M:%S",
     ):
         try:
             return datetime.strptime(s_val, fmt)
         except ValueError:
             continue
+
+    # FQResi sometimes writes the date twice and no time
+    parts = s_val.split()
+    if len(parts) == 2 and parts[0] == parts[1]:
+        s_val = parts[0]
+
     try:
-        dt = pd.to_datetime(s_val, dayfirst=True)
+        dt = pd.to_datetime(s_val, dayfirst=False)
         if pd.isna(dt):
             return None
-        return dt.to_pydatetime()
+        return dt.to_pydatetime().replace(tzinfo=None)
     except Exception:
         return None
 
@@ -776,6 +816,9 @@ class ResiResultSet:
                             r_row[k] = clean_float(r_row[k])
                     rs_dict[str(fn)] = r_row
 
+        sd_col = next((c for c in df.columns if str(c).lower() in ('sampledate', 'sampledata')), None)
+        slashed_order = slashed_date_order(df[sd_col]) if sd_col is not None else 'MDY'
+
         # Build ResiResult entries
         for i in range(len(df)):
             row = df.iloc[i]
@@ -790,7 +833,7 @@ class ResiResultSet:
                     sample_date_key = k
                     break
             if sample_date_key is not None:
-                descriptors['SampleDate'] = clean_timestamp(sample_date_val)
+                descriptors['SampleDate'] = clean_timestamp(sample_date_val, slashed_order)
                 if sample_date_key != 'SampleDate':
                     descriptors.pop(sample_date_key, None)
 
@@ -2064,11 +2107,13 @@ def save_traces_to_dotresi(traces, filepath, append=True, resi_code=None, format
         feed_speed = float(trace.get_feedspeed()) * 10  # the trace's cm/min; .Resi files and FQResi use mm/min
         rpm = float(trace.get_rpm())
 
-        sample_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if isinstance(trace.header, dict):
-            dt_val = trace.header.get('dateTime') or trace.header.get('date') or trace.header.get('datetime')
-            if dt_val:
-                sample_date = str(dt_val)
+        # FQResi writes SampleDate as "%Y-%m-%d %H:%M:%S" (instrument clock)
+        try:
+            sample_date = trace.get_drilltime().strftime("%Y-%m-%d %H:%M:%S")
+        except (KeyError, ValueError, TypeError, AttributeError):
+            dt_val = trace.header.get('dateTime') if isinstance(trace.header, dict) else None
+            parsed = clean_timestamp(dt_val)
+            sample_date = parsed.strftime("%Y-%m-%d %H:%M:%S") if parsed else ""
 
         standardised = True
         if isinstance(trace.header, dict) and 'Standardised' in trace.header:

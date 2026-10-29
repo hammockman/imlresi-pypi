@@ -130,6 +130,22 @@ def test_new_results_use_latest_layout(tmp_path):
     assert list(read_raw(out)['df'].columns) == list(RESI_LAYOUTS['5.6.0'])
 
 
+@pytest.mark.parametrize('layout', ['4.2.4', '5.6.0'])
+def test_new_results_drop_nothing(tmp_path, layout):
+    # HQP saves raw traces as 4.2.4; columns the layout lacks shouldn't warn
+    from imlresi import Trace, save_traces_to_dotresi
+    t = Trace()
+    t.read(DATA / '2-178-withfeed.pdc')
+    out = tmp_path / 'n.Resi'
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', UserWarning)
+        save_traces_to_dotresi([t], out, format_version=layout)
+    df = read_raw(out)['df']
+    assert list(df.columns) == list(RESI_LAYOUTS[layout])
+    if layout == '5.6.0':
+        assert (df['CheckStatus'][0], df['AdjustRecord'][0], df['EqnType'][0]) == ('TBD', 'Auto', 'Linear')
+
+
 def test_mixed_sources_need_a_layout(tmp_path):
     a = load(CORPUS / 'resi' / 'C03' / 'C03.Resi')   # 4.2.4
     b = load(CORPUS / 'resi' / 'C06' / 'C06.Resi')   # 5.6.0

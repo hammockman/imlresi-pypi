@@ -2246,10 +2246,11 @@ def save_traces_to_dotresi(traces, filepath, append=True, resi_code=None, format
             'rSlope': 1.0,
             'rIntcpt': 0.0,
             'Comment': str(comment_val) if comment_val else "",
-            'CheckStatus': 'TBD',
-            'AdjustRecord': 'Auto',
-            'EqnType': 'Linear',
         })
+        # columns the 4.2.4 layout lacks; setting them there would only warn that they were dropped
+        for k, v in (('CheckStatus', 'TBD'), ('AdjustRecord', 'Auto'), ('EqnType', 'Linear')):
+            if k in target_cols:
+                descriptors[k] = v
 
         # Overlay API computed results if trace was processed via ResiAPI
         api_res = getattr(trace, '_res', None) or getattr(trace, 'res', None)

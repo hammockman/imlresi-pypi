@@ -17,6 +17,9 @@ dependencies = [
     "requests",
     "certifi",
     "loguru",
+    # Fabric's runtime packages are built against numpy 1.x, and the HQP
+    # notebooks install with `pip install --force-reinstall imlresi`, which
+    # would otherwise pull in numpy 2 and break them on import
     "numpy <2.0, >1.24.4",
     "pandas",
     "rdata",
@@ -49,7 +52,7 @@ Homepage = "https://github.com/hammockman/imlresi-pypi"
 # Delta Lake export with the pure-Python delta-rs engine
 delta = [
     "deltalake",
-    "pyarrow",
+    "pyarrow <26",  # pyarrow 26 needs numpy 2 but doesn't declare it
 ]
 # Delta Lake export through PySpark (e.g. Microsoft Fabric notebooks)
 spark = [
@@ -64,7 +67,7 @@ test = [
     "pytest",
     "jsondiff",
     "deltalake",
-    "pyarrow",
+    "pyarrow <26",
 ]
 
 [tool.setuptools]

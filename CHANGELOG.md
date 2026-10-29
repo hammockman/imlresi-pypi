@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `imlresi[delta]` installed pyarrow 26, which needs numpy 2, alongside
+  imlresi's numpy 1 and failed on import; the extra now caps `pyarrow <26`.
+
 ## 0.0.46 (2026-10-30)
 
 ### Check data written by 0.0.45 and earlier

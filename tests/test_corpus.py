@@ -111,3 +111,31 @@ def test_resi_traces_match_source_files(case):
     if case['id'] in ('C09', 'C10'):
         pytest.xfail('stored resTraces differ from the source files in this old app version')
     assert not mismatched
+
+
+DEN_CASES = [c for c in RESI_READABLE if 'denTraces' in c['nonempty_elements']]
+
+
+@pytest.mark.parametrize('case', DEN_CASES, ids=ids(DEN_CASES))
+def test_recomputed_density_matches_app(case):
+    """recompute_den_trace() against the web app's own denTraces.
+
+    Measured on 280 Dropbox files: exact for app 4.2.1 and 4.3.0, within
+    0.3% for 4.2.4/4.5.1 (Linear baseline) and about 1.2% for the
+    NonLinear baseline (5.0.0). The bound guards against regressions.
+    """
+    raw = read_raw(CORPUS / case['path'])
+    names = [str(n) for n in raw['df']['FileName']]
+    den = raw['denTraces'] if isinstance(raw['denTraces'], dict) else dict(zip(names, raw['denTraces']))
+    checked = 0
+    for r in load_set(case):
+        stored = den.get(r.FileName)
+        if stored is None:
+            continue
+        stored = np.ravel(np.asarray(stored, dtype=float))
+        got = r.recompute_den_trace()
+        assert len(got) == len(stored)
+        rel = np.mean(np.abs(got - stored)) / np.mean(np.abs(stored))
+        assert rel < 0.005, f'{r.FileName}: relative MAE {rel:.4f}'
+        checked += 1
+    assert checked

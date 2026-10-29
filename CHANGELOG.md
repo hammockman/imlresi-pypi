@@ -33,6 +33,13 @@
   `spark.databricks.delta.schema.autoMerge.enabled` for the rest of the
   session; it now uses the merge's own schema evolution.
 
+### Changed
+
+- Logging goes through the standard `logging` module (loggers
+  `imlresi.trace`, `imlresi.dotresi`) instead of loguru, so applications'
+  logging configuration applies; loguru is no longer a dependency.
+  Unconfigured, warnings still reach stderr.
+
 ## 0.0.46 (2026-10-30)
 
 ### Check data written by 0.0.45 and earlier

@@ -46,9 +46,11 @@ jh, June 2016
 from struct import unpack
 from collections import namedtuple
 from pathlib import Path
-from loguru import logger
+import logging
 import ujson as json  # faster; minifies by default
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class ResiAPIError(Exception):

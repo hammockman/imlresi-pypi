@@ -104,3 +104,12 @@ def test_api_gets_file_name_only(as_path):
     sent = post.call_args.kwargs['json']
     assert sent['trace_filename'] == '2-178-withfeed.pdc'
     json.dumps(sent)  # must be serialisable
+
+
+def test_warnings_go_through_standard_logging(caplog):
+    # so applications' logging handlers (e.g. HQP's) see them
+    import logging
+    with caplog.at_level(logging.WARNING, logger='imlresi'):
+        assert Trace().get_ubdia() is None
+    assert any(r.name == 'imlresi.trace' and 'Processing required' in r.getMessage()
+               for r in caplog.records)

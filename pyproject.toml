@@ -16,7 +16,6 @@ dependencies = [
     "ujson",
     "requests",
     "certifi",
-    "loguru",
     # Fabric's runtime packages are built against numpy 1.x, and the HQP
     # notebooks install with `pip install --force-reinstall imlresi`, which
     # would otherwise pull in numpy 2 and break them on import

@@ -540,7 +540,7 @@ def test_to_dotresi_computed_results_export(tmp_path):
     df = converted.get("df")
     assert df is not None
     row = df.iloc[0]
-    assert row["DBHOB"] == 150.5
+    assert row["DOB"] == 150.5  # DOB, not DBHOB, in the app's current layout
     assert row["BarkThickness"] == 12.5
     assert row["UBDIA"] == 128.0
     assert row["PrAWV"] == 2850.0

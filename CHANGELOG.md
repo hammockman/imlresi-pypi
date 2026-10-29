@@ -22,6 +22,16 @@
 
 ### Fixed
 
+- `.Resi` writing used invented column layouts: the "4.8.0" one lacked
+  DOB, Version, EqnType, MOEmodel, RadialMOEMethod, CheckStatus and
+  AdjustRecord (losing EqnType turns an "Ln" calibration into "Linear"),
+  and the "4.2.4" one added columns real 4.2.4 files don't have. Layouts
+  are now taken from real web-app files ('4.2.4', '4.5.1', '5.6.0'; '4.8.0'
+  is an alias of '5.6.0'). A file loaded and written back keeps its own
+  layout and every unchanged value exactly; `to_dotresi` and
+  `change_instrument_id` no longer convert files unless asked to.
+- A trace with no feed data (R `list(NULL)`) loaded as a one-sample NaN
+  feed trace.
 - Delta merge or append through a `DeltaTable`, a `file://` URI or a remote
   URI could overwrite the whole table; so could a failed table lookup on
   Spark. Creating a new table never replaces what is already there.

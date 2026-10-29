@@ -41,93 +41,82 @@ NUMERIC_COLUMNS = {
     'Decay', 'RingCount', 'BLCorrDen', 'rSlope', 'rIntcpt', 'RPMCoef'
 }
 
-DF_COLUMN_TYPES = {
-    'FileName': 'string',
-    'TreeID': 'string',
-    'ResiCode': 'string',
-    'SampleDate': 'string',
-    'TraceType': 'string',
-    'TreeClass': 'string',
-    'DBHOB': 'float64',
-    'UBDIA': 'float64',
-    'BarkThickness': 'float64',
-    'ExitBarkThickness': 'float64',
-    'DiscArea': 'float64',
-    'PrAWV': 'float64',
-    'PrMOE': 'float64',
-    'OWDensity': 'float64',
-    'CoreDensity': 'float64',
-    'DiscDensity': 'float64',
-    'EntryRadius': 'float64',
-    'EntryDensity': 'float64',
-    'ExitRadius': 'float64',
-    'ExitDensity': 'float64',
-    'Decay': 'float64',
-    'RingCount': 'float64',
-    'BLCorrDen': 'float64',
-    'rSlope': 'float64',
-    'rIntcpt': 'float64',
-    'RPMCoef': 'float64',
-    'FeedSpeed': 'float64',
-    'RPM': 'float64',
-    'Comment': 'string',
-    'Resource': 'string',
-    'BaselineMethod': 'string',
-    'Standardised': 'boolean',
-    'RingMethod': 'string',
-    'OffsetDrill': 'float64',
-    'OffsetFeed': 'float64',
-    'Lat': 'float64',
-    'Lon': 'float64',
-    'WebSite': 'string',
-    'RemoteSha': 'string',
+# df column layouts (order and pandas dtypes) of the .Resi files the FWPA web
+# app writes, taken from real files. The app has used about 20 layouts; these
+# are the ones this library can write:
+# - 4.2.4: FeedSpeed/RPM/Lat/Lon are text, the diameter column is DBHOB
+# - 4.5.1: adds DOB, CheckStatus, AdjustRecord, EqnType; drops RPMCoef
+# - 5.6.0: the layout of every app version from 4.5.8 on; adds MOEmodel,
+#   Version and RadialMOEMethod. From 4.5.3 the top-level `version` element
+#   holds R's version list and the app version is in df$Version.
+RESI_LAYOUTS = {
+    '4.2.4': {
+        'FileName': 'string', 'TreeID': 'string', 'ResiCode': 'string', 'SampleDate': 'string',
+        'TraceType': 'string', 'TreeClass': 'string', 'DBHOB': 'float64', 'UBDIA': 'float64',
+        'BarkThickness': 'float64', 'ExitBarkThickness': 'float64', 'DiscArea': 'float64',
+        'PrAWV': 'float64', 'PrMOE': 'float64', 'OWDensity': 'float64', 'CoreDensity': 'float64',
+        'DiscDensity': 'float64', 'EntryRadius': 'float64', 'EntryDensity': 'float64',
+        'ExitRadius': 'float64', 'ExitDensity': 'float64', 'Decay': 'float64', 'RingCount': 'Int32',
+        'BLCorrDen': 'float64', 'rSlope': 'float64', 'rIntcpt': 'float64', 'RPMCoef': 'float64',
+        'FeedSpeed': 'string', 'RPM': 'string', 'Comment': 'string', 'Resource': 'string',
+        'BaselineMethod': 'string', 'Standardised': 'boolean', 'RingMethod': 'string',
+        'OffsetDrill': 'Int32', 'OffsetFeed': 'Int32', 'Lat': 'string', 'Lon': 'string',
+        'WebSite': 'string', 'RemoteSha': 'string',
+    },
+    '4.5.1': {
+        'FileName': 'string', 'TreeID': 'string', 'ResiCode': 'string', 'SampleDate': 'string',
+        'TraceType': 'string', 'TreeClass': 'string', 'CheckStatus': 'string',
+        'AdjustRecord': 'string', 'DOB': 'float64', 'UBDIA': 'float64', 'BarkThickness': 'float64',
+        'ExitBarkThickness': 'float64', 'OWDensity': 'float64', 'CoreDensity': 'float64',
+        'DiscDensity': 'float64', 'PrAWV': 'float64', 'PrMOE': 'float64', 'EntryRadius': 'float64',
+        'EntryDensity': 'float64', 'ExitRadius': 'float64', 'ExitDensity': 'float64',
+        'Decay': 'float64', 'DiscArea': 'float64', 'RingCount': 'float64', 'BLCorrDen': 'float64',
+        'FeedSpeed': 'Int32', 'RPM': 'Int32', 'Comment': 'string', 'Resource': 'string',
+        'BaselineMethod': 'string', 'Standardised': 'boolean', 'RingMethod': 'string',
+        'OffsetDrill': 'float64', 'OffsetFeed': 'float64', 'Lat': 'float64', 'Lon': 'float64',
+        'WebSite': 'string', 'RemoteSha': 'string', 'rSlope': 'float64', 'rIntcpt': 'float64',
+        'EqnType': 'string',
+    },
+    '5.6.0': {
+        'FileName': 'string', 'TreeID': 'string', 'ResiCode': 'string', 'SampleDate': 'string',
+        'TraceType': 'string', 'MOEmodel': 'string', 'CheckStatus': 'string',
+        'AdjustRecord': 'string', 'DOB': 'float64', 'UBDIA': 'float64', 'BarkThickness': 'float64',
+        'ExitBarkThickness': 'float64', 'OWDensity': 'float64', 'CoreDensity': 'float64',
+        'DiscDensity': 'float64', 'PrAWV': 'float64', 'PrMOE': 'float64', 'EntryRadius': 'float64',
+        'EntryDensity': 'float64', 'ExitRadius': 'float64', 'ExitDensity': 'float64',
+        'Decay': 'float64', 'DiscArea': 'float64', 'RingCount': 'Int32', 'BLCorrDen': 'float64',
+        'FeedSpeed': 'Int32', 'RPM': 'Int32', 'Comment': 'string', 'Resource': 'string',
+        'BaselineMethod': 'string', 'Standardised': 'boolean', 'RingMethod': 'string',
+        'OffsetDrill': 'float64', 'OffsetFeed': 'float64', 'Lat': 'float64', 'Lon': 'float64',
+        'WebSite': 'string', 'Version': 'string', 'RemoteSha': 'string', 'rSlope': 'float64',
+        'rIntcpt': 'float64', 'EqnType': 'string', 'RadialMOEMethod': 'string',
+    },
 }
-DF_COLUMNS = list(DF_COLUMN_TYPES.keys())
+RESI_LAYOUT_ALIASES = {'legacy': '4.2.4', 'v4.2.4': '4.2.4', '4.8.0': '5.6.0', 'latest': '5.6.0'}
+LATEST_RESI_LAYOUT = '5.6.0'
 
-LEGACY_DF_COLUMN_TYPES = {
-    'FileName': 'string',
-    'TreeID': 'string',
-    'ResiCode': 'string',
-    'SampleDate': 'string',
-    'TreeClass': 'string',
-    'TraceType': 'string',
-    'CheckStatus': 'string',
-    'AdjustRecord': 'string',
-    'DBHOB': 'float64',
-    'UBDIA': 'float64',
-    'BarkThickness': 'float64',
-    'ExitBarkThickness': 'float64',
-    'DiscArea': 'float64',
-    'PrAWV': 'float64',
-    'PrMOE': 'float64',
-    'OWDensity': 'float64',
-    'CoreDensity': 'float64',
-    'DiscDensity': 'float64',
-    'EntryRadius': 'float64',
-    'EntryDensity': 'float64',
-    'ExitRadius': 'float64',
-    'ExitDensity': 'float64',
-    'Decay': 'float64',
-    'RingCount': 'float64',
-    'BLCorrDen': 'float64',
-    'FeedSpeed': 'float64',
-    'RPM': 'float64',
-    'Comment': 'string',
-    'Resource': 'string',
-    'BaselineMethod': 'string',
-    'Standardised': 'boolean',
-    'RingMethod': 'string',
-    'OffsetDrill': 'float64',
-    'OffsetFeed': 'float64',
-    'Lat': 'float64',
-    'Lon': 'float64',
-    'WebSite': 'string',
-    'RemoteSha': 'string',
-    'rSlope': 'float64',
-    'rIntcpt': 'float64',
-    'RPMCoef': 'float64',
-    'EqnType': 'string',
+# R's version list as the app saved it (from 4.5.3 on)
+R_VERSION_LIST = {
+    'platform': "x86_64-pc-linux-gnu", 'arch': "x86_64", 'os': "linux-gnu",
+    'system': "x86_64, linux-gnu", 'status': "", 'major': "4", 'minor': "6.0",
+    'year': "2026", 'month': "04", 'day': "24", 'svn rev': "89956", 'language': "R",
+    'version.string': "R version 4.6.0 (2026-04-24)", 'nickname': "Because it was There",
 }
+
+
+def resi_layout(format_version):
+    """Canonical layout name for a format_version ('4.2.4', 'legacy', '4.8.0', ...)."""
+    v = str(format_version).lower().strip()
+    v = RESI_LAYOUT_ALIASES.get(v, v)
+    if v not in RESI_LAYOUTS:
+        raise ValueError(f"Unknown .Resi format_version {format_version!r}; "
+                         f"choose from {sorted(RESI_LAYOUTS) + sorted(RESI_LAYOUT_ALIASES)}")
+    return v
+
+
+DF_COLUMN_TYPES = RESI_LAYOUTS[LATEST_RESI_LAYOUT]
+DF_COLUMNS = list(DF_COLUMN_TYPES.keys())
+LEGACY_DF_COLUMN_TYPES = RESI_LAYOUTS['4.2.4']
 LEGACY_DF_COLUMNS = list(LEGACY_DF_COLUMN_TYPES.keys())
 
 RINGDATA_COLUMN_TYPES = {
@@ -203,6 +192,9 @@ def clean_array(arr):
     Gracefully handles string arrays, converting 'Not Available' to NaN.
     """
     if arr is None:
+        return None
+    # R's NULL and list(NULL) (no data) arrive as None and [None]
+    if isinstance(arr, (list, tuple)) and all(x is None for x in arr):
         return None
     arr = np.array(arr).ravel()
     try:
@@ -307,6 +299,78 @@ DUCKDB_PROCESSING_COLUMNS = [
     'Standardised', 'RingMethod', 'EqnType', 'Version',
 ]
 
+def is_na(v):
+    """True for None and scalar NA values (NaN, pd.NA, NaT)."""
+    if v is None:
+        return True
+    try:
+        return bool(pd.isna(v)) if np.ndim(v) == 0 else False
+    except (TypeError, ValueError):
+        return False
+
+
+def nullable_dtype(dtype):
+    """pandas dtype that can hold NA for a column read as `dtype`."""
+    d = str(dtype)
+    if d in ('object', 'str'):
+        return 'string'
+    if d.startswith('int') or d.startswith('uint'):
+        return 'Int32'
+    if d == 'bool':
+        return 'boolean'
+    return d
+
+
+def df_value(r, col, dtype):
+    """Value of df column `col` for result r, as written to a .Resi file.
+
+    A value unchanged since r was loaded is written exactly as read; anything
+    else is converted to the column's type.
+    """
+    cur = r.get_descriptor(col)
+    if r.raw_row is not None and col in r.raw_row and r.loaded_descriptors is not None:
+        before = r.loaded_descriptors.get(col)
+        same = (is_na(cur) and is_na(before)) or (not is_na(cur) and not is_na(before) and _equal(cur, before))
+        raw = r.raw_row[col]
+        if same and (is_na(raw) or _fits(raw, nullable_dtype(dtype))):
+            return None if is_na(raw) else raw
+    if is_na(cur):
+        return None
+    d = nullable_dtype(dtype)
+    if d == 'string':
+        if isinstance(cur, (datetime, pd.Timestamp)):
+            return cur.strftime("%Y-%m-%d %H:%M:%S")
+        if isinstance(cur, float) and cur.is_integer():
+            return str(int(cur))  # e.g. FeedSpeed '2000' in 4.2.4 files
+        return str(cur)
+    if d == 'boolean':
+        if isinstance(cur, str):
+            return cur.strip().upper() not in ("FALSE", "F", "0")
+        return bool(cur)
+    f = clean_float(cur)
+    if f is None:
+        return None
+    return int(round(f)) if d == 'Int32' else f
+
+
+def _fits(v, d):
+    """Whether raw value v can be written as-is to a column of nullable dtype d."""
+    if d == 'string':
+        return isinstance(v, str)
+    if d == 'boolean':
+        return isinstance(v, (bool, np.bool_))
+    if isinstance(v, (bool, np.bool_)) or not isinstance(v, (int, float, np.number)):
+        return False
+    return d != 'Int32' or float(v).is_integer()
+
+
+def _equal(a, b):
+    try:
+        return bool(a == b)
+    except (TypeError, ValueError):
+        return False
+
+
 DUCKDB_PREFIX_RE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 
 
@@ -404,6 +468,8 @@ class ResiResult:
 
         # Metadata
         self.ResiFile = resi_file
+        self.raw_row = None  # the df row as read from a .Resi file
+        self.loaded_descriptors = None  # descriptors as first loaded from it
 
         # Placeholders for stored intermediate traces (if available in Resi file)
         self.den_trace = None
@@ -730,6 +796,9 @@ class ResiResultSet:
     def __init__(self, dotresi_filepaths=None):
         self.results = []
         self.version_info = {}
+        # per source file: its df layout and raw version element, so a loaded
+        # set can be written back in the layout it came in
+        self.source_layouts = {}
 
         if dotresi_filepaths:
             if isinstance(dotresi_filepaths, (str, Path)):
@@ -849,6 +918,7 @@ class ResiResultSet:
         for i in range(len(df)):
             row = df.iloc[i]
             descriptors = row.to_dict()
+            raw_row = dict(descriptors)
 
             # Map legacy spelling typos case-insensitively
             sample_date_val = None
@@ -913,6 +983,8 @@ class ResiResultSet:
                 resi_file=str(filepath),
                 rs_row=rs_row
             )
+            result.raw_row = raw_row
+            result.loaded_descriptors = dict(descriptors)
 
             # Parse precomputed arrays if available
             den_traces = converted.get('denTraces')
@@ -951,6 +1023,11 @@ class ResiResultSet:
             self.results.append(result)
 
         self.version_info[str(filepath)] = version_str
+        self.source_layouts[str(filepath)] = {
+            'columns': list(df.columns),
+            'dtypes': {c: str(df[c].dtype) for c in df.columns},
+            'version': version_obj,
+        }
         return self
 
     @property
@@ -1621,7 +1698,29 @@ class ResiResultSet:
                     if 'ResiCode' in row:
                         row['ResiCode'] = new_id
 
-    def to_dotresi(self, filepath, overwrite=False, resi_code=None, format_version="4.8.0"):
+    def _write_layout(self, results, format_version, source_layouts):
+        """Columns, dtypes, version element and target app version for to_dotresi.
+
+        With format_version None, results all loaded from files of one layout
+        are written back in that layout; anything else gets the latest one.
+        """
+        if format_version is None:
+            sources = {r.ResiFile for r in results if r.raw_row is not None}
+            layouts = [source_layouts[f] for f in sources if f in source_layouts]
+            all_loaded = all(r.raw_row is not None for r in results)
+            if all_loaded and layouts and all(l['columns'] == layouts[0]['columns'] for l in layouts):
+                src = layouts[0]
+                return src['columns'], src['dtypes'], src['version'], None
+            format_version = LATEST_RESI_LAYOUT
+        name = resi_layout(format_version)
+        types = RESI_LAYOUTS[name]
+        if name in ('4.2.4', '4.5.1'):
+            version = np.array([f"Version {name}"])
+        else:
+            version = {k: np.array([v]) for k, v in R_VERSION_LIST.items()}
+        return list(types), types, version, f"Version {name}"
+
+    def to_dotresi(self, filepath, overwrite=False, resi_code=None, format_version=None):
         """
         Saves the ResiResultSet to a .Resi file using the
         complete list structure and column schema required for Shiny compatibility.
@@ -1629,56 +1728,31 @@ class ResiResultSet:
         :param filepath: Target path for the .Resi file.
         :param overwrite: Whether to overwrite existing destination file or merge.
         :param resi_code: Optional instrument serial number override.
-        :param format_version: Format version to generate ("4.8.0" for modern FWPA or "4.2.4" / "legacy" for older format).
+        :param format_version: df layout to write: '4.2.4' (alias 'legacy'),
+            '4.5.1' or '5.6.0' (the layout of app versions 4.5.8 on; aliases
+            '4.8.0', 'latest'). None (default) writes results loaded from
+            .Resi files of one layout back in that layout, keeping unchanged
+            values exactly as read, and anything else in the latest layout.
+            Converting drops columns the target layout doesn't have, with a
+            warning if they hold values.
         """
         filepath = Path(filepath)
         if filepath.parent:
             filepath.parent.mkdir(parents=True, exist_ok=True)
 
-        fmt_ver = str(format_version).lower().strip()
-        is_legacy = fmt_ver in ("4.2.4", "legacy", "v4.2.4")
-
-        # Auto-detect format_version if not explicitly legacy and file exists with overwrite=False
-        if filepath.exists() and not overwrite and format_version == "4.8.0":
-            try:
-                existing = ResiResultSet(filepath)
-                if existing.version_info and any("4.2.4" in str(v) for v in existing.version_info.values()):
-                    is_legacy = True
-            except Exception:
-                pass
-
-        target_df_columns = LEGACY_DF_COLUMNS if is_legacy else DF_COLUMNS
-        target_column_types = LEGACY_DF_COLUMN_TYPES if is_legacy else DF_COLUMN_TYPES
-
-        # Merge existing data if file exists and we are not overwriting
         results_to_write = list(self.results)
-        if is_legacy:
-            version = ["Version 4.2.4"]
-        else:
-            version_info = { # copied directly from FWPA web app
-                'platform': "x86_64-pc-linux-gnu",
-                'arch': "x86_64",
-                'os': "linux-gnu",
-                'system': "x86_64, linux-gnu",
-                'status': "",
-                'major': "4",
-                'minor': "6.0",
-                'year': "2026",
-                'month': "04",
-                'day': "24",
-                'svn rev': "89956",
-                'language': "R",
-                'version.string': "R version 4.6.0 (2026-04-24)",
-                'nickname': "Because it was There",
-            }
-            version = list(version_info.values())[0]
-
+        source_layouts = dict(self.source_layouts)
         if filepath.exists() and not overwrite:
             existing = ResiResultSet(filepath)
+            source_layouts.update(existing.source_layouts)
             # Find which of existing results are NOT in self (by FileName)
             self_filenames = {r.FileName for r in self.results}
             merged_results = [r for r in existing.results if r.FileName not in self_filenames]
             results_to_write = merged_results + results_to_write
+
+        target_df_columns, target_column_types, version, target_app_version = \
+            self._write_layout(results_to_write, format_version, source_layouts)
+        is_legacy = 'DOB' not in target_column_types and 'DBHOB' in target_column_types
 
         # Reconstruct components from results_to_write
         df_rows = []
@@ -1690,36 +1764,28 @@ class ResiResultSet:
         ring_rows = []
         board_rows = []
         rs_rows = []
+        dropped = set()
 
         for r in results_to_write:
             fname = r.FileName
-
-            # Reconstruct df row using case-insensitive descriptor lookups
-            row = {col: None for col in target_df_columns}
-            for col in target_df_columns:
-                val = r.get_descriptor(col)
-                if val is not None:
-                    if target_column_types.get(col) == 'boolean':
-                        if isinstance(val, str):
-                            val = val.upper() not in ("FALSE", "F", "0")
-                        else:
-                            val = bool(val)
-                    elif target_column_types.get(col) == 'float64':
-                        val = clean_float(val)
-                    row[col] = val
+            row = {col: df_value(r, col, target_column_types[col]) for col in target_df_columns}
             row['FileName'] = fname
 
-            if is_legacy:
-                if not row.get('DBHOB'):
-                    dob_val = r.get_descriptor('DOB') or r.get_descriptor('DBHOB')
-                    if dob_val is not None:
-                        row['DBHOB'] = clean_float(dob_val)
+            # 4.2.4 keeps the diameter in DBHOB
+            if is_legacy and row.get('DBHOB') is None:
+                row['DBHOB'] = clean_float(r.get_descriptor('DOB'))
+            if target_app_version and 'Version' in row and row['Version'] is None:
+                row['Version'] = target_app_version
 
             if resi_code:
                 row['ResiCode'] = resi_code
             if not row.get('ResiCode'):
-                row['ResiCode'] = "PD500-0000"
+                row['ResiCode'] = "PD400-0000"
             df_rows.append(row)
+
+            for k, v in r.descriptors.items():
+                if k not in row and k not in ('DOB', 'DBHOB', 'TraceHash', 'ResiFile', 'rPos') and not is_na(v):
+                    dropped.add(k)
 
             # Reconstruct arrays
             if r.drill is not None:
@@ -1799,7 +1865,10 @@ class ResiResultSet:
             rs_row['TreeID'] = r.get_descriptor('TreeID', '')
             rs_rows.append(rs_row)
 
-        df_final = pd.DataFrame(df_rows) if df_rows else pd.DataFrame(columns=target_df_columns)
+        if dropped and target_app_version:
+            warnings.warn(f"Columns not in the {target_app_version} layout were dropped: {sorted(dropped)}")
+
+        df_final = pd.DataFrame(df_rows, columns=target_df_columns) if df_rows else pd.DataFrame(columns=target_df_columns)
         rs_df = pd.DataFrame(rs_rows) if rs_rows else pd.DataFrame(columns=RSDF_COLUMNS)
         ring_data = pd.DataFrame(ring_rows) if ring_rows else pd.DataFrame(columns=RINGDATA_COLUMNS)
         board_moe = pd.DataFrame(board_rows) if board_rows else pd.DataFrame(columns=BOARDMOE_COLUMNS)
@@ -1812,7 +1881,7 @@ class ResiResultSet:
         # Apply strict typing schemas to the pandas DataFrames
         for col, dtype in target_column_types.items():
             if col in df_final.columns:
-                df_final[col] = df_final[col].astype(dtype)
+                df_final[col] = df_final[col].astype(nullable_dtype(dtype))
 
         for col, dtype in RINGDATA_COLUMN_TYPES.items():
             if col in ring_data.columns:
@@ -1843,7 +1912,7 @@ class ResiResultSet:
             'version': version,
             'boardMOE': board_moe_dt,
         }
-        if not is_legacy:
+        if target_app_version != "Version 4.2.4":
             resi_data['regVar'] = None
 
         rdata.write_rds(str(filepath), resi_data, constructor_dict=custom_class_map)
@@ -2330,7 +2399,7 @@ def main(args=None):
         print(f"Error writing to output file: {e}")
         sys.exit(1)
 
-def change_instrument_id(dotresi_filepath, new_instrument_id, output_filepath=None, overwrite=True, format_version="4.8.0"):
+def change_instrument_id(dotresi_filepath, new_instrument_id, output_filepath=None, overwrite=True, format_version=None):
     """
     Loads a .Resi file, updates the instrument ID (ResiCode / toolserial) for all results in the set,
     and saves the modified result set back to disk.
@@ -2339,7 +2408,7 @@ def change_instrument_id(dotresi_filepath, new_instrument_id, output_filepath=No
     :param new_instrument_id: New instrument ID string (e.g. 'PD500-0755').
     :param output_filepath: Optional path to save the modified .Resi file. If None, overwrites input file.
     :param overwrite: Whether to overwrite target output file if it exists. Default True.
-    :param format_version: Format version to generate ("4.8.0" for modern FWPA or "4.2.4" / "legacy" for older format).
+    :param format_version: df layout to write (see ResiResultSet.to_dotresi); None keeps the file's own.
     :return: ResiResultSet with updated instrument IDs.
     """
     filepath = normalize_filepath(dotresi_filepath)

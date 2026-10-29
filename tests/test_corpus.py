@@ -72,6 +72,12 @@ def test_trace_matches_archived_parse(case):
     t.read(CORPUS / case['path'])
     expected = json.loads((CORPUS / case['path']).with_suffix('.expected.json').read_text())
     got = t.to_dict()
+    if t.trace_format not in ('json', 'pdc'):
+        # the archive's conversion wrote these in mm; IML's JSON (and to_json()
+        # since 0.0.46) has cm
+        for k in ('depthMsmt', 'deviceLength'):
+            assert expected['header'][k] == pytest.approx(got['header'][k] * 10)
+            expected['header'][k] = got['header'][k]
     assert got['profile'] == expected['profile']
     diff = {k: (expected['header'].get(k), got['header'].get(k))
             for k in set(expected['header']) | set(got['header'])

@@ -16,9 +16,17 @@
 - **SampleDate.** Traces saved with `save_traces_to_dotresi` lost their time
   of day (00:00:00), and month-first dates such as `10/27/2020` from web-app
   files could be read day-first.
-- **`Trace.hash()`.** Since February 2026, binary and text traces hashed
-  differently from earlier releases. This release restores the earlier
-  JSON for them; hashes of traces stored since February may differ.
+- **`Trace.hash()` of binary and text traces changes.** `to_json()` of a
+  binary `.rgp` or PD-Tools text trace wrote `depthMsmt` and `deviceLength`
+  in mm where IML's JSON uses cm (154.3 instead of 15.43); they are now in
+  cm. Settings these formats lack (`depthPresel`, `feedOn`, ...) are written
+  as 0 again, as before February 2026, instead of null. Both change the JSON,
+  and so `Trace.hash()`, of every binary and text trace. JSON `.rgp` and
+  `.pdc` traces are unaffected. Nothing in FQResi or the Resi API reads the
+  two depth fields, so no results were affected by the wrong values.
+- **Anything hashing the API request** (e.g. an `md5` of `trace._inp`)
+  changes for every trace: besides the above, `process_using_resiapi` now
+  sends only the trace's file name, not its full local path.
 
 ### Fixed
 

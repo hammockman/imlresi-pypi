@@ -812,9 +812,10 @@ class Trace():
                     "number": lambda x: x['measurement_number'],
                     "idNumber": lambda x: x['description'],
                     # "remark": "",  # user specified comment string
-                    "deviceLength": lambda x: x['max_drill_depth'],  # ??????
+                    # IML's JSON has these in cm; Trace keeps mm
+                    "deviceLength": lambda x: round(x['max_drill_depth']/10, 4),
                     "depthMode": lambda x: x['depth_mode'],
-                    "depthMsmt": lambda x: x['drill_depth'],  # ??????
+                    "depthMsmt": lambda x: round(x['drill_depth']/10, 4),
                     "ampMaxFeed": lambda x: x['max_feed_amplitude'],
                     "ampMaxDrill": lambda x: x['max_drill_amplitude'],
                     #"abortState": lambda x: x['abort_reason'],

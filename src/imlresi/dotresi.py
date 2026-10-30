@@ -2037,10 +2037,11 @@ class ResiResultSet:
 
         rdata.write_rds(str(filepath), resi_data, constructor_dict=custom_class_map)
 
-    def load_traces(self, traces_or_files, api_uri, ctrlset=None, annotation=None):
+    def load_traces(self, traces_or_files, api_uri, ctrlset=None, annotation=None, auth=None):
         """
         Loads Trace objects or trace filenames, passes them through the API,
         converts them to ResiResult objects, and adds them to the result set.
+        auth is the API server's login, as for Trace.process_using_resiapi().
         """
         from imlresi.trace import Trace
 
@@ -2062,7 +2063,7 @@ class ResiResultSet:
                 raise TypeError(f"Unsupported trace/file type: {type(item)}")
 
             # Process using the Resi API
-            res = trace.process_using_resiapi(api_uri, ctrlset=ctrlset, annotation=annotation)
+            res = trace.process_using_resiapi(api_uri, ctrlset=ctrlset, annotation=annotation, auth=auth)
 
             # Get filename
             fname = None

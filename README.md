@@ -48,7 +48,13 @@ tr.hash()                    # md5 of to_json(), e.g. as a database key
 ```
 
 `Trace.process_using_resiapi(uri)` sends the trace to a Resi API server and
-keeps the result, which is then available as e.g. `tr.get_ubdia()`.
+keeps the result, which is then available as e.g. `tr.get_ubdia()`. A server
+that wants a login gets it with `auth=(name, key)` (only over `https://`):
+
+```python
+tr.process_using_resiapi("https://resiapi.aliente.ch/predict",
+                         auth=(os.environ["RESI_API_USER"], os.environ["RESI_API_KEY"]))
+```
 
 ### .Resi files
 

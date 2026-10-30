@@ -260,7 +260,8 @@ def test_load_traces():
         }
 
         rs = ResiResultSet()
-        rs.load_traces(tr, api_uri="https://api.example.com/resi")
+        rs.load_traces(tr, api_uri="https://api.example.com/resi", auth=("me", "s3cret"))
+        assert mock_post.call_args.kwargs["auth"] == ("me", "s3cret")
 
         assert len(rs) == 1
         res = rs[0]

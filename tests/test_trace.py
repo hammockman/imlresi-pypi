@@ -239,15 +239,34 @@ def test_process_using_resiapi_mocked():
         assert json_payload["rgp"]["header"]["idNumber"] == "TEST 7"
 
 
+def test_process_using_resiapi_sends_the_login_only_over_https():
+    from unittest.mock import patch
+    tr = trace.Trace()
+    tr.read('tests/data/2-178-withfeed.pdc')
+    with patch('requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {}
+        tr.process_using_resiapi('https://api.example.com/resi', auth=("me", "s3cret"))
+        assert mock_post.call_args.kwargs["auth"] == ("me", "s3cret")
+        tr.process_using_resiapi('http://api.example.com/resi')   # no login: fine
+        assert mock_post.call_args.kwargs["auth"] is None
+        mock_post.reset_mock()
+        with pytest.raises(trace.ResiAPIError, match="isn't https"):
+            tr.process_using_resiapi('http://api.example.com/resi', auth=("me", "s3cret"))
+        mock_post.assert_not_called()
+
+
 @pytest.mark.skipif(
     not os.environ.get("RESI_API_URI"),
     reason="RESI_API_URI environment variable or .env file is not set"
 )
 def test_process_using_resiapi_real():
+    """RESI_API_USER and RESI_API_KEY, if set, are the server's login."""
     tr = trace.Trace()
     tr.read('tests/data/1-131-withfeed-pdtools167.rgp')
     api_uri = os.environ.get("RESI_API_URI")
-    res = tr.process_using_resiapi(api_uri)
+    auth = (os.environ["RESI_API_USER"], os.environ["RESI_API_KEY"]) if os.environ.get("RESI_API_KEY") else None
+    res = tr.process_using_resiapi(api_uri, auth=auth)
     assert isinstance(res, dict)
 
 

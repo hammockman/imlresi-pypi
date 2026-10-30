@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- `Trace.process_using_resiapi()` and `ResiResultSet.load_traces()` take
+  `auth`, the API server's login (a `(name, key)` pair or any requests
+  auth), sent only to an `https://` server.
+
 ### Fixed
 
 - `imlresi[delta]` installed pyarrow 26, which needs numpy 2, alongside

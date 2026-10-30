@@ -864,13 +864,21 @@ class Trace():
 
         return axs
 
-    def process_using_resiapi(self, api_uri, ctrlset=None, annotation=None, timeout=30.0, verify=None):
+    def process_using_resiapi(self, api_uri, ctrlset=None, annotation=None, timeout=30.0, verify=None, auth=None):
+        """Send the trace to the Resi API server at api_uri, keep its reply
+        and return it (a dict).
 
+        auth is the server's login, if it wants one: a (name, key) pair, or
+        any requests authentication object. It is only sent to an https://
+        api_uri: ResiAPIError otherwise, as anyone on the way could read it.
+        """
         import certifi
         import requests
 
         if verify is None:
             verify = certifi.where()
+        if auth is not None and not str(api_uri).startswith("https://"):
+            raise ResiAPIError(f"Not sending a login to {api_uri}: it isn't https, so anyone on the way could read it.")
 
         def push_through_api(inp, uri):
             """
@@ -882,6 +890,7 @@ class Trace():
                 res = requests.post(
                     uri,
                     json=inp,
+                    auth=auth,
                     verify=verify,
                     timeout=timeout,
                 )

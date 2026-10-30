@@ -620,7 +620,10 @@ class ResiResult:
 
     def _trace_standardise_v5(self, tr):
         """
-        Standardizes raw drill trace torque values using firmware 5+ chip size equations.
+        Standardizes raw drill trace torque values to chip size 0.4 mm
+        (2000 mm/min at 2500 rpm), as FQResi does for app version 5 on:
+        power laws by Resource from app 5.5 (Gendvilas et al. 2024),
+        exp(sqrt(chip size)) curves before.
         """
         if not self._is_standardised() or self._text('ResiCode', '') == "RinnTech":
             return tr.copy()
@@ -632,27 +635,38 @@ class ResiResult:
 
         resource = self._text('Resource', 'Other')
 
-        # Softwood vs Hardwood coefficients
-        if resource in ("HoopPine", "MediumDensitySoftwood"):
-            c1, c2 = 58.0, 0.6
-        elif resource == "RadiataPine":
-            c1, c2 = 68.0, 0.57
-        elif resource == "SouthernPine":
-            c1, c2 = 73.0, 0.63
-        elif resource == "HighDensitySoftwood":
-            c1, c2 = 102.0, 0.57
-        elif resource in ("Enitens", "Eglobulus", "PlantationTeak", "MediumDensityHardwood"):
-            c1, c2 = 83.0, 0.48
-        elif resource == "CCV":
-            c1, c2 = 104.0, 0.48
-        elif resource == "HighDensityHardwood":
-            c1, c2 = 94.9, 0.45
-        else:
-            c1, c2 = 68.0, 0.57
+        if self._app_version()[:2] < (5, 5):
+            def corr(x):
+                if resource == "HoopPine":
+                    return -36.9 + 37.5 * np.exp(np.sqrt(x))
+                if resource in ("RadiataPine", "SouthernPine", "MediumDensitySoftwood"):
+                    return -44.0 + 44.0 * np.exp(np.sqrt(x))
+                if resource in ("HighDensitySoftwood", "Enitens", "Eglobulus", "PlantationTeak",
+                                "MediumDensityHardwood"):
+                    return -2.68 + 88.8 * np.sqrt(x)
+                if resource == "HighDensityHardwood":
+                    return 4.07 + 103.0 * np.sqrt(x)
+                return None
+            c = corr(cs)
+            if c is None:
+                # FQResi keeps corr = 1, scaling the trace by ~39
+                logger.warning(f"{self.FileName}: FQResi had no standardisation for Resource "
+                               f"'{resource}' before app 5.5; its densities are implausible")
+                c = 1.0
+            return tr / (c / (-44.0 + 44.0 * np.exp(np.sqrt(cs_std))))
 
-        ampl_std = c1 * (cs_std ** c2)
-        ampl = c1 * (cs ** c2)
-        stCoef = ampl / ampl_std
+        coefs = {
+            "HoopPine": (58.0, 0.6), "MediumDensitySoftwood": (58.0, 0.6),
+            "RadiataPine": (68.0, 0.57), "SouthernPine": (73.0, 0.63),
+            "HighDensitySoftwood": (102.0, 0.57),
+            "Enitens": (83.0, 0.48), "Eglobulus": (83.0, 0.48), "PlantationTeak": (83.0, 0.48),
+            "MediumDensityHardwood": (83.0, 0.48),
+            "CCV": (104.0, 0.48), "HighDensityHardwood": (94.9, 0.45),
+        }
+        if resource not in coefs:
+            return tr.copy()  # FQResi: ampl = ampl.std = 1
+        c1, c2 = coefs[resource]
+        stCoef = (c1 * cs ** c2) / (c1 * cs_std ** c2)
         return tr / stCoef
 
     def recompute_corr_trace(self, RPMCoef=None):
@@ -742,20 +756,17 @@ class ResiResult:
         if eqn_type == "Linear":
             return c_trace * r_slope + r_intcpt
         elif eqn_type == "Ln":
-            bark_thickness = self._num('BarkThickness', 0.0)
-            s = int(max(1, bark_thickness * 10))
-
+            # FQResi: mean(cTrace[s:f]), R's inclusive 1-based s:f with
+            # fractional indices truncated
+            s = max(1.0, self._num('BarkThickness', 0.0) * 10)
             if self._text('TraceType', '') == "P-B":
-                entry_radius = self._num('EntryRadius', 0.0)
-                f = int(entry_radius * 10)
+                f = self._num('EntryRadius', 0.0) * 10
             else:
-                ubdia = self._num('UBDIA', 0.0)
-                f = int(ubdia * 10 + s)
-
-            if f <= s or f > len(c_trace):
+                f = self._num('UBDIA', 0.0) * 10 + s
+            if f <= s:
                 f = len(c_trace)
-
-            sub_trace = c_trace[s:f]
+            idx = np.floor(s + np.arange(int(np.floor(f - s)) + 1)).astype(int) - 1
+            sub_trace = c_trace[idx[idx < len(c_trace)]]  # R would give NA past the end
             mean_torque = np.mean(sub_trace) if len(sub_trace) > 0 else 1.0
             if mean_torque <= 0.0:
                 mean_torque = 1.0

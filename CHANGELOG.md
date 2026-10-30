@@ -16,6 +16,12 @@
   doesn't store them (4.2.4 files never do); FQResi uses -0.786, 1 for
   every instrument but one. Traces measured at other than 2500 rpm were
   ~0.3% off; they are now exact.
+- Density recomputation for app 5.0–5.4 files used the standardisation
+  FQResi adopted for app 5.5 (it matters at other than 2000 mm/min and
+  2500 rpm); those files now use the earlier formulas. An unknown Resource
+  is no longer standardised as RadiataPine (FQResi leaves it as is from
+  5.5). The Ln equation's mean now covers exactly FQResi's samples. Checked
+  against FQResi's own R code (`tools/fqresi_reference.py`).
 - `to_dotresi` and `save_traces_to_dotresi` filled in missing `denTraces`
   and `cumDenTraces` with the library's own recomputation, which then read
   back as the app's. For raw traces saved without API results, the inputs

@@ -12,6 +12,10 @@
   library now follows the app version, and matches app 5.0.0 densities
   exactly (it was ~1.2% off). Eglobulus used the wrong sigmoid offset
   (6 instead of 7.5).
+- Density recomputation used RPM coefficients a=-0.8, b=1 when a file
+  doesn't store them (4.2.4 files never do); FQResi uses -0.786, 1 for
+  every instrument but one. Traces measured at other than 2500 rpm were
+  ~0.3% off; they are now exact.
 - `to_dotresi` and `save_traces_to_dotresi` filled in missing `denTraces`
   and `cumDenTraces` with the library's own recomputation, which then read
   back as the app's. For raw traces saved without API results, the inputs

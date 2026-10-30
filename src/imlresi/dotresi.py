@@ -386,30 +386,35 @@ def duckdb_table_names(table_prefix=""):
     return tuple(f"{table_prefix}{t}" for t in ('traces', 'results', 'rings', 'boards'))
 
 
+# RPM standardisation coefficients FQResi uses for every instrument but one
+# (inst/extdata/ResiIDcodes.csv); .Resi files often don't store them
+DEFAULT_RPM_COEF = (-0.786, 1.0)
+
+
 def get_rpm_coef_params(rpm_coef):
     """
     Extracts the standard 'a' and 'b' calibration coefficients from an RPMCoef column.
-    Defaults to a=-0.8, b=1.0 if not specified.
+    Defaults to DEFAULT_RPM_COEF if not specified.
     """
     if rpm_coef is None:
-        return -0.8, 1.0
+        return DEFAULT_RPM_COEF
     # Unpack nested list or array values to get scalar coefficient
     while hasattr(rpm_coef, '__len__') and not isinstance(rpm_coef, (str, bytes, dict)):
         if len(rpm_coef) == 0:
-            return -0.8, 1.0
+            return DEFAULT_RPM_COEF
         rpm_coef = rpm_coef[0]
 
     if isinstance(rpm_coef, (int, float)):
         if np.isnan(rpm_coef):
-            return -0.8, 1.0
+            return DEFAULT_RPM_COEF
         return float(rpm_coef), 1.0
     if isinstance(rpm_coef, dict):
-        a = rpm_coef.get('a', rpm_coef.get('RPMCoef.a', -0.8))
-        b = rpm_coef.get('b', rpm_coef.get('RPMCoef.b', 1.0))
+        a = rpm_coef.get('a', rpm_coef.get('RPMCoef.a', DEFAULT_RPM_COEF[0]))
+        b = rpm_coef.get('b', rpm_coef.get('RPMCoef.b', DEFAULT_RPM_COEF[1]))
         return float(a), float(b)
     # Check attributes if it is a custom R list object
-    a = getattr(rpm_coef, 'a', getattr(rpm_coef, 'RPMCoef_a', -0.8))
-    b = getattr(rpm_coef, 'b', getattr(rpm_coef, 'RPMCoef_b', 1.0))
+    a = getattr(rpm_coef, 'a', getattr(rpm_coef, 'RPMCoef_a', DEFAULT_RPM_COEF[0]))
+    b = getattr(rpm_coef, 'b', getattr(rpm_coef, 'RPMCoef_b', DEFAULT_RPM_COEF[1]))
     return float(a), float(b)
 
 def nonlinear_baseline_correction(a_mm, k, b, d, f):

@@ -126,10 +126,8 @@ DEN_CASES = [c for c in RESI_READABLE if 'denTraces' in c['nonempty_elements']]
 def test_recomputed_density_matches_app(case):
     """recompute_den_trace() against the web app's own denTraces.
 
-    Measured on 280 Dropbox files: exact for app 4.2.1 and 4.3.0 and for
-    the NonLinear baseline of app 5.0.0 (all 57 traces with app densities),
-    within 0.3% for 4.2.4/4.5.1 (Linear baseline). The bound guards
-    against regressions.
+    Exact for these cases. Across all 14,262 Dropbox traces with app
+    densities, exact except some app 4.2.3/4.2.4 files.
     """
     raw = read_raw(CORPUS / case['path'])
     names = [str(n) for n in raw['df']['FileName']]
@@ -143,7 +141,7 @@ def test_recomputed_density_matches_app(case):
         got = r.recompute_den_trace()
         assert len(got) == len(stored)
         rel = np.mean(np.abs(got - stored)) / np.mean(np.abs(stored))
-        assert rel < 0.005, f'{r.FileName}: relative MAE {rel:.4f}'
+        assert rel < 1e-6, f'{r.FileName}: relative MAE {rel:.6f}'
         checked += 1
     assert checked
 

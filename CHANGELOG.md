@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.0.47 (2026-10-30)
+
+### Check data written by 0.0.46 and earlier
+
+- **Recomputed densities.** Densities from `recompute_den_trace()` in
+  0.0.46 and earlier (and anything stored from them) differ from the app's: by ~0.3% for traces not drilled at
+  2500 rpm (wrong default RPM coefficient), and by up to ~1.2% for
+  NonLinear-baseline files from app 5.0–5.4. Densities written by the web
+  app itself are unaffected. `.Resi` files written by this library may hold
+  such recomputed `denTraces` (they are no longer written).
 
 ### Added
 

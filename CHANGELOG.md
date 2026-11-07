@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.48 (2026-11-08)
+
+### Fixed
+
+- `Trace.read()` on an empty file (e.g. a failed copy) raises
+  `ValueError: ... empty file, not a trace` instead of `IndexError`. Any
+  other file it doesn't recognise and that is too short for a PD-Tools 1.22
+  text export raises `ValueError: ... not a trace file imlresi reads`.
+
 ## 0.0.47 (2026-10-30)
 
 ### Check data written by 0.0.46 and earlier

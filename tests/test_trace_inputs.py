@@ -69,6 +69,23 @@ def test_binary_without_data(tmp_path):
         Trace().read(p)
 
 
+def test_empty_file(tmp_path):
+    """A 0-byte .rgp (a failed copy) says so, rather than an IndexError."""
+    p = tmp_path / 'empty.rgp'
+    p.write_bytes(b'')
+    with pytest.raises(ValueError, match='empty file'):
+        Trace().read(p)
+
+
+@pytest.mark.parametrize('content', ['\n', 'not a trace\n', '1\n' * 129])
+def test_unrecognised_text_file(tmp_path, content):
+    """Text that isn't a trace isn't read as a PD-Tools 1.22 export."""
+    p = tmp_path / 'junk.txt'
+    p.write_text(content)
+    with pytest.raises(ValueError, match='not a trace file'):
+        Trace().read(p)
+
+
 def test_unsupported_json_trace(tmp_path):
     J, _ = T.load_iml_json(DATA / '1-131-withfeed-json.rgp')  # raw file has literal tabs
     J['version'] = 3

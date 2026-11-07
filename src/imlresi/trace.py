@@ -83,6 +83,8 @@ def identify_format(fn):
     """
     with open(fn, 'rb') as f:
         byte1 = bytes(f.read(1))
+    if not byte1:
+        raise ValueError(f"{fn}: empty file, not a trace")
     if byte1 == b'\x12':
         fmt = 'bin'
     elif byte1 == b'\x7b':  # '{'=='\x7b'
@@ -304,6 +306,11 @@ def read_txt1(fn):
         return drill, feed
 
     lines = [line.strip() for line in read_text_lines(fn)]
+    # anything identify_format() didn't recognise ends up here: a v1.22 export
+    # has 129 header lines before its data
+    if len(lines) < 130:
+        raise ValueError(f"{fn}: not a trace file imlresi reads (too short for a "
+                         f"PD-Tools 1.22 text export: {len(lines)} lines)")
     drill, feed = read_drill_feed(lines)
     return {
         'raw': "\n".join(lines),
